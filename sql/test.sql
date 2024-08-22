@@ -1,1 +1,3 @@
-create table test id number(); 
+CREATE TABLE test (
+    id NUMBER
+);
