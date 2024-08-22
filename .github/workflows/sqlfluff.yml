@@ -27,5 +27,5 @@ jobs:
 
       - name: Run SQL linter
         run: |
-          sqlfluff lint sql/SWCC_SOURCE.sql
+          sqlfluff lint sql/SWCC_SOURCE.sql --dialect ansi
  
