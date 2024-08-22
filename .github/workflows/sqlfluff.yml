@@ -29,6 +29,7 @@ jobs:
         run: |
           sqlfluff parse sql/test.sql --dialect ansi
           sqlfluff fix sql/test.sql --dialect ansi
+          cat sql/test.sql
           sqlfluff lint sql/test.sql --dialect ansi 
           
  
