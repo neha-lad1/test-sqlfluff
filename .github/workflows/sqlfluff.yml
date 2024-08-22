@@ -27,8 +27,8 @@ jobs:
 
       - name: Run SQL linter
         run: |
-          sqlfluff parse sql/SYNERGYZE_AUDIT.sql --dialect ansi
-          sqlfluff fix sql/SYNERGYZE_AUDIT.sql --dialect ansi
-          sqlfluff lint sql/SYNERGYZE_AUDIT.sql --dialect ansi 
+          sqlfluff parse sql/test.sql --dialect ansi
+          sqlfluff fix sql/test.sql --dialect ansi
+          sqlfluff lint sql/test.sql --dialect ansi 
           
  
