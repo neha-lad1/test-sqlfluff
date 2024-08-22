@@ -5,9 +5,10 @@ based on the configuration file provided.
 
 import os
 import sys
+from typing import Any, Dict
+
 import yaml
 import oci
-from typing import Any, Dict
 
 
 def load_yaml(file_path: str) -> Dict[str, Any]:
