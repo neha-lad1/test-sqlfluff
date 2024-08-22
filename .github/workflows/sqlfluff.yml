@@ -27,5 +27,5 @@ jobs:
 
       - name: Run SQL linter
         run: |
-          sqlfluff lint path/to/sql/files
+          sqlfluff lint sql
  
