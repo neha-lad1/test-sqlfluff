@@ -1,5 +1,6 @@
 """
-This script manages OCI Data Flow applications by creating or updating them based on the configuration file provided.
+This script manages OCI Data Flow applications by creating or updating them
+based on the configuration file provided.
 """
 
 import os
@@ -44,7 +45,9 @@ def get_existing_applications(client, compartment_id: str) -> Dict[str, Any]:
         raise
 
 
-def create_or_update_application(client, compartment_id: str, dataflow_app: Dict[str, Any], overwrite: bool) -> None:
+def create_or_update_application(
+    client, compartment_id: str, dataflow_app: Dict[str, Any], overwrite: bool
+) -> None:
     """
     Create or update an OCI Data Flow application based on the provided details.
 
@@ -74,7 +77,8 @@ def create_or_update_application(client, compartment_id: str, dataflow_app: Dict
                     application_id=app_id
                 )
             else:
-                print(f"Application with display name '{display_name}' already exists. Skipping creation.")
+                print(f"Application with display name '{display_name}' already exists. "
+                      "Skipping creation.")
         else:
             print(f"Creating new application: {display_name}")
             create_application_response = client.create_application(
@@ -96,16 +100,16 @@ def create_or_update_application(client, compartment_id: str, dataflow_app: Dict
         raise
 
 
-def main(config_file: str) -> None:
+def main(config_file_path: str) -> None:
     """
     Main function to load configuration and manage OCI Data Flow applications.
 
-    :param config_file: Path to the configuration file
+    :param config_file_path: Path to the configuration file
     """
     try:
-        config_data = load_yaml(config_file)
+        config_data = load_yaml(config_file_path)
     except Exception as e:
-        print(f"Error loading configuration file '{config_file}': {e}")
+        print(f"Error loading configuration file '{config_file_path}': {e}")
         return
     
     environment_data = config_data.get('environments_list')[0]
@@ -125,5 +129,5 @@ if __name__ == "__main__":
         print("Usage: python manage_dataflow_apps.py <config_file>")
         sys.exit(1)
     
-    config_file = sys.argv[1]
-    main(config_file)
+    config_file_path = sys.argv[1]
+    main(config_file_path)
