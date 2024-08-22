@@ -26,8 +26,8 @@ jobs:
           pip install sqlfluff
 
       - name: Run SQL linter
+        continue-on-error: true
         run: |
-          continue-on-error: true
           sqlfluff parse sql/SYNERGYZE_AUDIT.sql --dialect ansi
           sqlfluff fix sql/SYNERGYZE_AUDIT.sql --dialect ansi
           sqlfluff lint sql/SYNERGYZE_AUDIT.sql --dialect ansi 
