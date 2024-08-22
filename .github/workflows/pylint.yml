@@ -40,4 +40,4 @@ jobs:
 
       - name: Save pylint report
         run: |
-          pylint **/*.py --output-format=parseable > pylint-report.txt
+          pylint py/*.py --output-format=parseable > pylint-report.txt
