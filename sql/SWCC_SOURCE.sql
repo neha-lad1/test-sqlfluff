@@ -1,4 +1,3 @@
- 
 BEGIN
 DBMS_CLOUD.CREATE_EXTERNAL_TABLE (
     table_name => 'SWCC_SOURCE',
