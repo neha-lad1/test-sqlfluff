@@ -27,9 +27,9 @@ jobs:
 
       - name: Run SQL linter
         run: |
-          sqlfluff parse sql/SWCC_SOURCE.sql --dialect oracle
-          sqlfluff fix sql/SWCC_SOURCE.sql --dialect oracle
+          sqlfluff parse sql/SWCC_SOURCE.sql --dialect ansi
+          sqlfluff fix sql/SWCC_SOURCE.sql --dialect ansi
           cat sql/SWCC_SOURCE.sql
-          sqlfluff lint sql/SWCC_SOURCE.sql --dialect oracle 
+          sqlfluff lint sql/SWCC_SOURCE.sql --dialect ansi 
           
  
