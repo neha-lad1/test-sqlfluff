@@ -1,0 +1,38 @@
+name: Terraform Lint Workflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint-terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install TFLint
+        run: |
+          curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+
+      - name: Run TFLint
+        run: |
+          tflint --init
+          tflint tf/variables.tf  # Specify the directory containing your Terraform files
+        continue-on-error: true  # Optional: allows the workflow to succeed even if TFLint finds issues
+
+      - name: Upload TFLint report
+        uses: actions/upload-artifact@v3
+        with:
+          name: tflint-report
+          path: tflint.log
+        continue-on-error: true  # Optional: allows the workflow to succeed even if the upload fails
+
+      - name: Save TFLint report
+        run: |
+          tflint tf/ --output tflint.log
