@@ -28,8 +28,6 @@ jobs:
       - name: Run SQL linter
         continue-on-error: true
         run: |
-          sqlfluff parse sql/SYNERGYZE_AUDIT.sql --dialect ansi
-          sqlfluff fix sql/SYNERGYZE_AUDIT.sql --dialect ansi
-          sqlfluff lint sql/SYNERGYZE_AUDIT.sql --dialect ansi 
+          sqlfluff lint sql/*.sql --dialect ansi 
           
  
