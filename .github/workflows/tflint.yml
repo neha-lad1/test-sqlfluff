@@ -16,23 +16,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install TFLint
-        run: |
-          curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
-
-      - name: Run TFLint
-        run: |
-          tflint --init
-          tflint tf/variables.tf  # Specify the directory containing your Terraform files
-        continue-on-error: true  # Optional: allows the workflow to succeed even if TFLint finds issues
-
-      - name: Upload TFLint report
-        uses: actions/upload-artifact@v3
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v4
         with:
-          name: tflint-report
-          path: tflint.log
-        continue-on-error: true  # Optional: allows the workflow to succeed even if the upload fails
-
-      - name: Save TFLint report
-        run: |
-          tflint tf/ --output tflint.log
+          tflint_version: v0.52.0
+  
+      - name: Show version
+        run: tflint --version
+  
+      - name: Init TFLint
+        run: tflint --init
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}
+  
+      - name: Run TFLint
+        run: tflint -f compact
