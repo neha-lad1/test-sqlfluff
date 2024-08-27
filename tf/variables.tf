@@ -75,3 +75,4 @@ variable "windows_logdef" {
    error_message = "All the keys like loggroup and dg are needed.Refer terraform.tfvars.example for reference."
  }
 }
+
