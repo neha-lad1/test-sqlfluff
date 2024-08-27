@@ -28,17 +28,7 @@ jobs:
           pip install pylint
 
       - name: Run pylint
+        continue-on-error: true
         run: |
           pylint py/*.py
-        continue-on-error: true  # Optional: allows the workflow to succeed even if pylint finds issues
 
-      - name: Upload pylint report
-        uses: actions/upload-artifact@v3
-        with:
-          name: pylint-report
-          path: pylint-report.txt
-        continue-on-error: true  # Optional: allows the workflow to succeed even if the upload fails
-
-      - name: Save pylint report
-        run: |
-          pylint py/*.py --output-format=parseable > pylint-report.txt

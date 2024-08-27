@@ -10,7 +10,6 @@ from typing import Any, Dict
 import yaml
 import oci
 
-
 def load_yaml(file_path: str) -> Dict[str, Any]:
     """
     Load a YAML file and return its contents as a dictionary.
