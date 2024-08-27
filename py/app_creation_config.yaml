@@ -1,0 +1,28 @@
+environments_list:
+- name: ENVIRONMENT
+  compartment_id: COMPARTMENT_ID
+
+dataflow_app:
+  - details:
+      archive_uri: oci://OPERATIONS_BUCKET@NAMESPACE/dataflow-applications/dependencyArchive/archive.zip
+      configuration:
+        spark_files: oci://OPERATIONS_BUCKET@NAMESPACE/dataflow-applications/pipelines/waterquality_dashboard/raw_to_curated/fact_wa_eve_wqd_sample_result/config.yaml
+        spark_submit_pyFiles: oci://OPERATIONS_BUCKET@NAMESPACE/dataflow-applications/src/utility/error_handling.py,oci://OPERATIONS_BUCKET@NAMESPACE/dataflow-applications/src/utility/oci_services.py,oci://OPERATIONS_BUCKET@NAMESPACE/dataflow-applications/src/utility/task_utils.py,oci://OPERATIONS_BUCKET@NAMESPACE/dataflow-applications/src/utility/file_move.py,oci://OPERATIONS_BUCKET@NAMESPACE/dataflow-applications/src/utility/oci_utils.py,oci://OPERATIONS_BUCKET@NAMESPACE/dataflow-applications/src/utility/write_utils.py,oci://OPERATIONS_BUCKET@NAMESPACE/dataflow-applications/src/utility/common_utils.py,oci://OPERATIONS_BUCKET@NAMESPACE/dataflow-applications/src/utility/read_utils.py,oci://OPERATIONS_BUCKET@NAMESPACE/dataflow-applications/src/utility/email_notification.py,oci://OPERATIONS_BUCKET@NAMESPACE/dataflow-applications/src/utility/data_validations.py,oci://OPERATIONS_BUCKET@NAMESPACE/dataflow-applications/pipelines/waterquality_dashboard/raw_to_curated/fact_wa_eve_wqd_sample_result/transformations.py
+      display_name: MV_WQD_SAMPLE_RESULT
+      execute: "--py-files oci://OPERATIONS_BUCKET@NAMESPACE/dataflow-applications/src/utility/error_handling.py, oci://OPERATIONS_BUCKET@NAMESPACE/dataflow-applications/src/utility/oci_services.py, \\\n oci://OPERATIONS_BUCKET@NAMESPACE/dataflow-applications/src/utility/task_utils.py, \\\n oci://OPERATIONS_BUCKET@NAMESPACE/dataflow-applications/src/utility/file_move.py, oci://OPERATIONS_BUCKET@NAMESPACE/dataflow-applications/src/utility/oci_utils.py, \\\n oci://OPERATIONS_BUCKET@NAMESPACE/dataflow-applications/src/utility/write_utils.py,  oci://OPERATIONS_BUCKET@NAMESPACE/dataflow-applications/src/utility/common_utils.py, \\\n oci://OPERATIONS_BUCKET@NAMESPACE/dataflow-applications/src/utility/read_utils.py, oci://OPERATIONS_BUCKET@NAMESPACE/dataflow-applications/src/utility/email_notification.py, oci://OPERATIONS_BUCKET@NAMESPACE/dataflow-applications/src/utility/data_validations.py,   oci://OPERATIONS_BUCKET@NAMESPACE/dataflow-applications/pipelines/waterquality_dashboard/raw_to_curated/fact_wa_eve_wqd_sample_result/transformations.py \\\n --files oci://OPERATIONS_BUCKET@NAMESPACE/dataflow-applications/pipelines/waterquality_dashboard/raw_to_curated/fact_wa_eve_wqd_sample_result/config.yaml \\\n oci://OPERATIONS_BUCKET@NAMESPACE/dataflow-applications/src/main.py ENVIRONMENT"
+      file_uri: oci://OPERATIONS_BUCKET@NAMESPACE/dataflow-applications/pipelines/waterquality_dashboard/raw_to_curated/dim_wa_org_waterqa_supplier/dim_wa_org_waterqa_supplier.py
+      logs_bucket_uri: oci://OPERATIONS_BUCKET@NAMESPACE/dataflow-applications/logs/
+      pool_id: POOL_ID
+      private_endpoint_id: PRIVATE_ENDPOINT_ID
+      type: BATCH
+      driver_shape: VM.Standard.E4.Flex
+      executor_shape: VM.Standard.E4.Flex
+      language: PYTHON
+      num_executors: 1
+      spark_version: '3.5.0'
+      driver_shape_config:
+        ocpus: 8.0
+        memory_in_gbs: 64.0
+      executor_shape_config:
+        ocpus: 8.0
+        memory_in_gbs: 64.0
