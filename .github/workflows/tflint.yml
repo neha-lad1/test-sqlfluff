@@ -4,9 +4,8 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
+    paths:
+      - 'tf/**'
 
 jobs:
   lint-terraform:
@@ -30,4 +29,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}
   
       - name: Run TFLint
-        run: tflint -f compact
+        run: tflint -f compact --recursive
