@@ -62,7 +62,6 @@ def create_or_update_application(
     try:
         existing_apps = get_existing_applications(client, compartment_id)
         display_name = dataflow_app['display_name']
-        
         if display_name in existing_apps:
             app_id = existing_apps[display_name]
             if overwrite:
@@ -115,7 +114,7 @@ def main(config_file_path: str) -> None:
     environment_data = config_data.get('environments_list')[0]
     compartment_id = environment_data.get('compartment_id')
 
-    dataflow_app = config_data['dataflow_app'][0]['details']  # Adjusted path to access 'details'
+    dataflow_app = config_data['dataflow_app'][0]['details']
 
     overwrite = os.getenv('OVERWRITE_EXISTING', 'no').lower() == 'yes'
     oci_config = oci.config.from_file(os.getenv('OCI_CONFIG_FILE', '~/.oci/config'))
