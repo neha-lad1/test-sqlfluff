@@ -51,7 +51,8 @@ jobs:
 
     # Step 4: Show which release version was selected
     - name: Show selected release version
-      run: echo "Selected Release Version: ${{ env.RELEASE_VERSION }}"
+      run: |
+        echo "Selected Release Version: ${{ env.RELEASE_VERSION }}"
 
     # Step 5: Download and extract release asset
     - name: Download and extract release asset
