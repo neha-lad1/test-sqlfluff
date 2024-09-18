@@ -71,9 +71,7 @@ jobs:
         latest: false
         extract: true
 
-    - name: Print Home
-      run: |
-        ls -lrt
+
 
 
 										   
