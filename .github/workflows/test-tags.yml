@@ -39,8 +39,7 @@ jobs:
         echo "RELEASE_VERSION=${{ github.event.inputs.release_version }}" >> $GITHUB_ENV
 
     - name: Get available releases
-      id: get_releases
-												   
+      id: get_releases							   
       uses: actions/github-script@v4
       with:
         script: |
