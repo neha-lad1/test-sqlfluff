@@ -17,7 +17,7 @@ on:
           description: Select the release version
           required: true
           options:
-            - v1.0.0
+            $RELEASE
 
 jobs:
   deploy:
