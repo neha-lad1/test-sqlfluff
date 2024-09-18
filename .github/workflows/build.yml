@@ -20,8 +20,8 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
       with:
-        ref: develop
-
+        ref: main
+    
     - name: Determine initial version
       id: get_initial_version
       run: |
@@ -81,7 +81,7 @@ jobs:
 
     - name: Package the code
       run: |
-        zip -r ${{ steps.ensure_unique_tag.outputs.VERSION }}.zip .
+        zip -r test-${{ steps.ensure_unique_tag.outputs.VERSION }}.zip .
 
     - name: check the file loaction
       run: ls -l
@@ -101,8 +101,8 @@ jobs:
       uses: actions/upload-release-asset@v1
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./${{ steps.ensure_unique_tag.outputs.VERSION }}.zip
-        asset_name: ${{ steps.ensure_unique_tag.outputs.VERSION }}.zip
+        asset_path: ./test-${{ steps.ensure_unique_tag.outputs.VERSION }}.zip
+        asset_name: test-${{ steps.ensure_unique_tag.outputs.VERSION }}.zip
         asset_content_type: application/zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}

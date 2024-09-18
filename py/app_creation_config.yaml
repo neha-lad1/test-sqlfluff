@@ -2,7 +2,6 @@ environments_list:
 - name: ENVIRONMENT
   compartment_id: COMPARTMENT_ID
 
-
 dataflow_app:
   - details:
       archive_uri: oci://OPERATIONS_BUCKET@NAMESPACE/dataflow-applications/dependencyArchive/archive.zip
