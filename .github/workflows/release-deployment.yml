@@ -1,0 +1,55 @@
+name: Release Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        type: string
+        description: 'Optional: Specify a release version or leave blank to automatically select the latest'
+        required: false
+        default: ''
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Get available releases
+      id: get_releases
+      uses: actions/github-script@v4
+      with:
+        script: |
+          const releases = await github.repos.listReleases({
+            owner: context.repo.owner,
+            repo: context.repo.repo
+          });
+          if (!releases.data.length) {
+            throw new Error("No releases found");
+          }
+          const releaseTags = releases.data.map(release => release.tag_name);
+          core.setOutput("releases", releaseTags);
+          core.setOutput("latest_release", releaseTags[0]);
+
+    - name: Set release version
+      if: ${{ github.event.inputs.release_version == '' }}
+      run: |
+        echo "No release version provided. Using the latest release."
+        echo "RELEASE_VERSION=${{ steps.get_releases.outputs.latest_release }}" >> $GITHUB_ENV
+
+    - name: Use provided release version
+      if: ${{ github.event.inputs.release_version != '' }}
+      run: |
+        echo "Using provided release version: ${{ github.event.inputs.release_version }}"
+        echo "RELEASE_VERSION=${{ github.event.inputs.release_version }}" >> $GITHUB_ENV
+
+    - name: Debug release version
+      run: echo "Deploying release version ${{ env.RELEASE_VERSION }}"
+
+    - name: Download and extract release asset
+      uses: robinraju/release-downloader@v1
+      with:
+        repository: ${{ github.repository }}
+        tag: ${{ env.RELEASE_VERSION }}
+        fileName: 'test-${{ env.RELEASE_VERSION }}.zip'
+        latest: false
+        extract: true
