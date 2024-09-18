@@ -1,18 +1,18 @@
 name: test-tags
- 
+
 on:
-    workflow_dispatch:
-      inputs:
-        release_version:
-          type: choice
-          description: Select the release version
-          required: false
-          default: ''
-      
+  workflow_dispatch:
+    inputs:
+      release_version:
+        type: string
+        description: Select the release version or leave blank for latest
+        required: false
+        default: ''
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Set up environment
       run: |
@@ -28,20 +28,19 @@ jobs:
             repo: context.repo.repo
           });
           return releases.data.map(release => release.tag_name);
-      continue-on-error: true
     
-    - name: Set release version
-      if: github.event.inputs.release_version == ''
+    - name: Set release version to latest if none selected
+      if: ${{ github.event.inputs.release_version == '' }}
       run: echo "RELEASE_VERSION=${{ steps.get_releases.outputs.result[0] }}" >> $GITHUB_ENV
 
     - name: Ensure permissions
       run: chmod -R u+rwx ${{ github.workspace }}
 
     - name: Remove anything
-      if: always()  # This ensures that the step runs regardless of the outcome of previous steps
+      if: always()
       run: |
         rm -rf ${{ github.workspace }}/*
-    
+
     - name: Download and extract release asset
       uses: robinraju/release-downloader@v1
       with:
