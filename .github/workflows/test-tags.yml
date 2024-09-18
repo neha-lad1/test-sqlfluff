@@ -67,7 +67,7 @@ jobs:
       with:
         repository: ${{ github.repository }}
         tag: ${{ env.RELEASE_VERSION }}
-        fileName: 'ADW-${{ env.RELEASE_VERSION }}.zip'
+        fileName: 'test-${{ env.RELEASE_VERSION }}.zip'
         latest: false
         extract: true
 
