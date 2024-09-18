@@ -19,7 +19,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
       with:
-        ref: develop
+        ref: main
     
     - name: Determine initial version
       id: get_initial_version
