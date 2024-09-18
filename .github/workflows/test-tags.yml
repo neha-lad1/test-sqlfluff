@@ -1,45 +1,25 @@
 name: test-tags
  
 on:
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Select the environment to deploy to'
-        required: true
-        default: 'TEST'
-        type: choice
-        options:
-          - TEST
-          - STG
-          - PRD
-      release_version:  
-        description: 'Select the release version'
-        required: false
-        default: ''
-      project_name:
-        type: choice
-        description: 'Select the project you wish to deploy'
-        default: ''
-        required: true
-        options:
-          - WATER_DM
-          - OPERATIONS_DM
-          - SOURCE_DM
-          - COMMON_DM
-          - WQD_DM
-          - ENERGY_DM
-
+    workflow_dispatch:
+      inputs:
+        release_version:
+          type: choice
+          description: Select the release version
+          required: false
+          default: ''
+      
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
+    
     steps:
     - name: Set up environment
       run: |
         echo "RELEASE_VERSION=${{ github.event.inputs.release_version }}" >> $GITHUB_ENV
-
+    
     - name: Get available releases
-      id: get_releases							   
+      id: get_releases
       uses: actions/github-script@v4
       with:
         script: |
@@ -49,7 +29,7 @@ jobs:
           });
           return releases.data.map(release => release.tag_name);
       continue-on-error: true
-
+    
     - name: Set release version
       if: github.event.inputs.release_version == ''
       run: echo "RELEASE_VERSION=${{ steps.get_releases.outputs.result[0] }}" >> $GITHUB_ENV
@@ -58,7 +38,7 @@ jobs:
       run: chmod -R u+rwx ${{ github.workspace }}
 
     - name: Remove anything
-      if: always()
+      if: always()  # This ensures that the step runs regardless of the outcome of previous steps
       run: |
         rm -rf ${{ github.workspace }}/*
     
@@ -70,8 +50,3 @@ jobs:
         fileName: 'test-${{ env.RELEASE_VERSION }}.zip'
         latest: false
         extract: true
-
-
-
-
-										   
