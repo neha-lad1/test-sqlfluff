@@ -104,9 +104,10 @@ jobs:
       - name: Package the code
         run: |
           # Ensure the VERSION is set correctly from the previous step
-          echo "Packaging code with version: ${{ steps.ensure_unique_tag.outputs.VERSION }}"
-          if [ -n "${{ steps.ensure_unique_tag.outputs.VERSION }}" ]; then
-            zip -r TEST-${{ steps.ensure_unique_tag.outputs.VERSION }}.zip .
+          VERSION="${{ steps.ensure_unique_tag.outputs.VERSION }}"
+          echo "Packaging code with version: $VERSION"
+          if [ -n "$VERSION" ]; then
+            zip -r TEST-"$VERSION".zip .
           else
             echo "Error: VERSION is not set. Exiting."
             exit 1
