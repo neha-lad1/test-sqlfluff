@@ -1,0 +1,139 @@
+name: CI-CD-Manual-Approval-Workflow
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - 'Code/**'
+      - 'DevOps/**'
+
+jobs:
+  checkout:
+    runs-on: ubuntu-latest
+    environment: DEV
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          ref: develop
+
+  pylint_checks:
+    runs-on: ubuntu-latest
+    environment: DEV
+    needs: checkout
+
+    steps:
+      - name: Run pylint checks
+        continue-on-error: true
+        run: |
+          pylint Code/*.py
+          pylint DevOps/*.py
+
+  versioning:
+    runs-on: ubuntu-latest
+    environment: DEV
+    needs: checkout
+
+    steps:
+      - name: Determine initial version
+        id: get_initial_version
+        run: |
+          LATEST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1) 2>/dev/null || echo "v0.0.0")
+          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+          if [ "$LATEST_TAG" = "v0.0.0" ]; then
+            VERSION="v1.0.0"
+          else
+            MAJOR=$(echo $LATEST_TAG | awk -F. '{print $1}' | sed 's/v//')
+            MINOR=$(echo $LATEST_TAG | awk -F. '{print $2}')
+            PATCH=$(echo $LATEST_TAG | awk -F. '{print $3}')
+            FILE_ADDED=$(git diff --name-status HEAD~1 HEAD | grep "^A" | wc -l)
+            FOLDER_ADDED=$(git diff --name-status HEAD~1 HEAD | grep "^A" | grep "/" | wc -l)
+            FILE_MODIFIED=$(git diff --name-status HEAD~1 HEAD | grep "^M" | wc -l)
+            if [ $FOLDER_ADDED -gt 0 ]; then
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+            elif [ $FILE_ADDED -gt 0 ]; then
+              MINOR=$((MINOR + 1))
+              PATCH=0
+            elif [ $FILE_MODIFIED -gt 0 ]; then
+              PATCH=$((PATCH + 1))
+            else
+              PATCH=$((PATCH + 1))
+            fi
+            VERSION="v$MAJOR.$MINOR.$PATCH"
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "::set-output name=VERSION::$VERSION"
+
+  ensure_unique_tag:
+    runs-on: ubuntu-latest
+    environment: DEV
+    needs: versioning
+
+    steps:
+      - name: Ensure unique version tag
+        id: ensure_unique_tag
+        uses: actions/github-script@v4
+        with:
+          script: |
+            const { data: releases } = await github.repos.listReleases({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100,
+            });
+            let tagExists = releases.some(release => release.tag_name === process.env.VERSION);
+            while (tagExists) {
+              const parts = process.env.VERSION.split('.');
+              parts[2] = (parseInt(parts[2]) + 1).toString();
+              process.env.VERSION = parts.join('.');
+              tagExists = releases.some(release => release.tag_name === process.env.VERSION);
+            }
+            core.setOutput("VERSION", process.env.VERSION);
+
+  package_code:
+    runs-on: ubuntu-latest
+    environment: DEV
+    needs: ensure_unique_tag
+
+    steps:
+      - name: Package the code
+        run: |
+          zip -r DATAFLOW-${{ steps.ensure_unique_tag.outputs.VERSION }}.zip .
+
+  create_release:
+    runs-on: ubuntu-latest
+    environment: DEV
+    needs: package_code
+
+    steps:
+      - name: Create GitHub release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ steps.ensure_unique_tag.outputs.VERSION }}
+          release_name: Release ${{ steps.ensure_unique_tag.outputs.VERSION }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  upload_release_asset:
+    runs-on: ubuntu-latest
+    environment: DEV
+    needs: create_release
+
+    steps:
+      - name: Upload to GitHub release
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./DATAFLOW-${{ steps.ensure_unique_tag.outputs.VERSION }}.zip
+          asset_name: DATAFLOW-${{ steps.ensure_unique_tag.outputs.VERSION }}.zip
+          asset_content_type: application/zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
