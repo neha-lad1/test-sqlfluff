@@ -65,7 +65,7 @@ jobs:
           fi
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "::set-output name=VERSION::$VERSION"
-
+  
   ensure_unique_tag:
     runs-on: ubuntu-latest
     environment: DEV
@@ -111,7 +111,6 @@ jobs:
           else
             echo "No files to zip."
             exit 1  # Exit with error code if nothing to zip
-          fi
 
   create_release:
     runs-on: ubuntu-latest
@@ -119,6 +118,9 @@ jobs:
     needs: package_code
 
     steps:
+      - name: Log Version for Debugging
+        run: echo "Version to be released: ${{ steps.ensure_unique_tag.outputs.VERSION }}"
+
       - name: Create GitHub release
         id: create_release
         uses: actions/create-release@v1
