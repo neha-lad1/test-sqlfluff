@@ -128,8 +128,8 @@ jobs:
         id: create_release
         uses: actions/create-release@v1
         with:
-          tag_name: ${{ steps.ensure_unique_tag.outputs.VERSION }}  # Ensure tag name is set
-          release_name: Release ${{ steps.ensure_unique_tag.outputs.VERSION }}  # Include version in release name
+          tag_name: ${{ steps.ensure_unique_tag.outputs.VERSION }}  # Set tag name
+          release_name: Release ${{ steps.ensure_unique_tag.outputs.VERSION }}  # Set release name
           draft: false
           prerelease: false
         env:
