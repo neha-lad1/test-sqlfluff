@@ -1,5 +1,1 @@
-Testing CI & CD wotkflow
-together
-..!
-
-
+removing content of readme
