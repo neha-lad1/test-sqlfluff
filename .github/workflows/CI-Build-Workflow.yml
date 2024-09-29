@@ -19,17 +19,6 @@ jobs:
         with:
           ref: main
 
-  pylint_checks:
-    runs-on: ubuntu-latest
-    environment: DEV
-    needs: checkout
-
-    steps:
-      - name: Run pylint checks
-        continue-on-error: true
-        run: |
-          pylint py/*.py
-
   versioning:
     runs-on: ubuntu-latest
     environment: DEV
