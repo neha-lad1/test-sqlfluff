@@ -75,7 +75,7 @@ jobs:
     steps:
       - name: Ensure unique version tag
         id: ensure_unique_tag
-        uses: actions/github-script@v5  # Ensure you are using the latest version
+        uses: actions/github-script@v5
         with:
           script: |
             const { data: releases } = await github.rest.repos.listReleases({
@@ -93,7 +93,7 @@ jobs:
             }
             core.setOutput("VERSION", newVersion); // Set the output to the new version
         env:
-          GITHUBTOKEN: ${{ secrets.GITHUBTOKEN }}  # Ensure the token is passed correctly
+          GITHUBTOKEN: ${{ secrets.GITHUBTOKEN }}  # Using GITHUBTOKEN
 
   package_code:
     runs-on: ubuntu-latest
@@ -128,7 +128,7 @@ jobs:
           draft: false
           prerelease: false
         env:
-          GITHUBTOKEN: ${{ secrets.GITHUBTOKEN }}
+          GITHUBTOKEN: ${{ secrets.GITHUBTOKEN }}  # Using GITHUBTOKEN
 
   upload_release_asset:
     runs-on: ubuntu-latest
@@ -144,4 +144,4 @@ jobs:
           asset_name: TEST-${{ steps.ensure_unique_tag.outputs.VERSION }}.zip
           asset_content_type: application/zip
         env:
-          GITHUBTOKEN: ${{ secrets.GITHUBTOKEN }}
+          GITHUBTOKEN: ${{ secrets.GITHUBTOKEN }}  # Using GITHUBTOKEN
