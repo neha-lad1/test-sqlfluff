@@ -75,10 +75,10 @@ jobs:
     steps:
       - name: Ensure unique version tag
         id: ensure_unique_tag
-        uses: actions/github-script@v5  # Updated to v5
+        uses: actions/github-script@v5  # Ensure you are using the latest version
         with:
           script: |
-            const { data: releases } = await github.repos.listReleases({
+            const { data: releases } = await github.rest.repos.listReleases({
               owner: context.repo.owner,
               repo: context.repo.repo,
               per_page: 100,
@@ -92,6 +92,8 @@ jobs:
               tagExists = releases.some(release => release.tag_name === newVersion);
             }
             core.setOutput("VERSION", newVersion); // Set the output to the new version
+        env:
+          GITHUBTOKEN: ${{ secrets.GITHUBTOKEN }}  # Ensure the token is passed correctly
 
   package_code:
     runs-on: ubuntu-latest
