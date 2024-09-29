@@ -128,12 +128,12 @@ jobs:
         id: create_release
         uses: actions/create-release@v1
         with:
-          tag_name: ${{ steps.ensure_unique_tag.outputs.VERSION }}
+          tag_name: ${{ steps.ensure_unique_tag.outputs.VERSION }}  # Ensure tag name is set
           release_name: Release ${{ steps.ensure_unique_tag.outputs.VERSION }}
           draft: false
           prerelease: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}  # Use the saved token
 
   upload_release_asset:
     runs-on: ubuntu-latest
@@ -149,4 +149,4 @@ jobs:
           asset_name: DATAFLOW-${{ steps.ensure_unique_tag.outputs.VERSION }}.zip
           asset_content_type: application/zip
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}  # Use the saved token
