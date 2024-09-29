@@ -6,22 +6,16 @@ on:
       - main
     paths:
       - 'py/**'
-      - 'sql/**'
 
 jobs:
   checkout:
     runs-on: ubuntu-latest
-    environment: DEV
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-        with:
-          ref: main
 
   versioning:
     runs-on: ubuntu-latest
-    environment: DEV
     needs: checkout
 
     steps:
@@ -53,12 +47,10 @@ jobs:
             fi
             VERSION="v$MAJOR.$MINOR.$PATCH"
           fi
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "::set-output name=VERSION::$VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV  # Use Environment Files
 
   ensure_unique_tag:
     runs-on: ubuntu-latest
-    environment: DEV
     needs: versioning
 
     steps:
@@ -80,20 +72,21 @@ jobs:
               newVersion = parts.join('.');
               tagExists = releases.some(release => release.tag_name === newVersion);
             }
-            core.setOutput("VERSION", newVersion); // Set the output to the new version
+            // Store the new version in an environment variable
+            console.log(`Setting VERSION=${newVersion}`);
+            fs.appendFileSync(process.env.GITHUB_ENV, `VERSION=${newVersion}\n`);  // Use Environment Files
         env:
-          GITHUBTOKEN: ${{ secrets.GITHUBTOKEN }}  # Using GITHUBTOKEN
+          GITHUBTOKEN: ${{ secrets.GITHUBTOKEN }}
 
   package_code:
     runs-on: ubuntu-latest
-    environment: DEV
     needs: ensure_unique_tag
 
     steps:
       - name: Package the code
         run: |
-          # Ensure the VERSION is set correctly from the previous step
-          VERSION="${{ steps.ensure_unique_tag.outputs.VERSION }}"
+          # Ensure the VERSION is set correctly from the environment
+          VERSION="${{ env.VERSION }}"
           echo "Packaging code with version: $VERSION"
           if [ -n "$VERSION" ]; then
             zip -r TEST-"$VERSION".zip .
@@ -101,36 +94,3 @@ jobs:
             echo "Error: VERSION is not set. Exiting."
             exit 1
           fi
-
-  create_release:
-    runs-on: ubuntu-latest
-    environment: DEV
-    needs: package_code
-
-    steps:
-      - name: Create GitHub release
-        id: create_release
-        uses: actions/create-release@v1
-        with:
-          tag_name: ${{ steps.ensure_unique_tag.outputs.VERSION }}
-          release_name: Release ${{ steps.ensure_unique_tag.outputs.VERSION }}
-          draft: false
-          prerelease: false
-        env:
-          GITHUBTOKEN: ${{ secrets.GITHUBTOKEN }}  # Using GITHUBTOKEN
-
-  upload_release_asset:
-    runs-on: ubuntu-latest
-    environment: DEV
-    needs: create_release
-
-    steps:
-      - name: Upload to GitHub release
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./TEST-${{ steps.ensure_unique_tag.outputs.VERSION }}.zip
-          asset_name: TEST-${{ steps.ensure_unique_tag.outputs.VERSION }}.zip
-          asset_content_type: application/zip
-        env:
-          GITHUBTOKEN: ${{ secrets.GITHUBTOKEN }}  # Using GITHUBTOKEN
