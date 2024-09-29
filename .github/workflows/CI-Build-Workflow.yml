@@ -75,7 +75,7 @@ jobs:
     steps:
       - name: Ensure unique version tag
         id: ensure_unique_tag
-        uses: actions/github-script@v4
+        uses: actions/github-script@v5  # Updated to v5
         with:
           script: |
             const { data: releases } = await github.repos.listReleases({
@@ -84,13 +84,14 @@ jobs:
               per_page: 100,
             });
             let tagExists = releases.some(release => release.tag_name === process.env.VERSION);
+            let newVersion = process.env.VERSION;  // Store the original version
             while (tagExists) {
-              const parts = process.env.VERSION.split('.');
+              const parts = newVersion.split('.');
               parts[2] = (parseInt(parts[2]) + 1).toString();
-              process.env.VERSION = parts.join('.');
-              tagExists = releases.some(release => release.tag_name === process.env.VERSION);
+              newVersion = parts.join('.');
+              tagExists = releases.some(release => release.tag_name === newVersion);
             }
-            core.setOutput("VERSION", process.env.VERSION);
+            core.setOutput("VERSION", newVersion); // Set the output to the new version
 
   package_code:
     runs-on: ubuntu-latest
@@ -100,7 +101,14 @@ jobs:
     steps:
       - name: Package the code
         run: |
-          zip -r TEST-${{ steps.ensure_unique_tag.outputs.VERSION }}.zip .
+          # Ensure the VERSION is set correctly from the previous step
+          echo "Packaging code with version: ${{ steps.ensure_unique_tag.outputs.VERSION }}"
+          if [ -n "${{ steps.ensure_unique_tag.outputs.VERSION }}" ]; then
+            zip -r TEST-${{ steps.ensure_unique_tag.outputs.VERSION }}.zip .
+          else
+            echo "Error: VERSION is not set. Exiting."
+            exit 1
+          fi
 
   create_release:
     runs-on: ubuntu-latest
@@ -114,11 +122,8 @@ jobs:
         with:
           tag_name: ${{ steps.ensure_unique_tag.outputs.VERSION }}
           release_name: Release ${{ steps.ensure_unique_tag.outputs.VERSION }}
-          draft: false  # Change to true if you want to create a draft release
+          draft: false
           prerelease: false
-          body: |
-            Release notes for version ${{ steps.ensure_unique_tag.outputs.VERSION }}.
-            - Add any relevant information or updates here.
         env:
           GITHUBTOKEN: ${{ secrets.GITHUBTOKEN }}
 
