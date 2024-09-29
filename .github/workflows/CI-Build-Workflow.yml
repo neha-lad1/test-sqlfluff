@@ -114,8 +114,11 @@ jobs:
         with:
           tag_name: ${{ steps.ensure_unique_tag.outputs.VERSION }}
           release_name: Release ${{ steps.ensure_unique_tag.outputs.VERSION }}
-          draft: false
+          draft: false  # Change to true if you want to create a draft release
           prerelease: false
+          body: |
+            Release notes for version ${{ steps.ensure_unique_tag.outputs.VERSION }}.
+            - Add any relevant information or updates here.
         env:
           GITHUBTOKEN: ${{ secrets.GITHUBTOKEN }}
 
