@@ -10,12 +10,28 @@ on:
 jobs:
   checkout:
     runs-on: ubuntu-latest
+    environment: DEV
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+        with:
+          ref: main
+
+  pylint_checks:
+    runs-on: ubuntu-latest
+    environment: DEV
+    needs: checkout
+
+    steps:
+      - name: Run pylint checks
+        continue-on-error: true
+        run: |
+          pylint py/*.py
 
   versioning:
     runs-on: ubuntu-latest
+    environment: DEV
     needs: checkout
 
     steps:
@@ -47,50 +63,85 @@ jobs:
             fi
             VERSION="v$MAJOR.$MINOR.$PATCH"
           fi
-          echo "VERSION=$VERSION" >> $GITHUB_ENV  # Use Environment Files
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "::set-output name=VERSION::$VERSION"
 
   ensure_unique_tag:
     runs-on: ubuntu-latest
+    environment: DEV
     needs: versioning
 
     steps:
       - name: Ensure unique version tag
         id: ensure_unique_tag
-        uses: actions/github-script@v5
+        uses: actions/github-script@v4
         with:
           script: |
-            const { data: releases } = await github.rest.repos.listReleases({
+            const { data: releases } = await github.repos.listReleases({
               owner: context.repo.owner,
               repo: context.repo.repo,
               per_page: 100,
             });
             let tagExists = releases.some(release => release.tag_name === process.env.VERSION);
-            let newVersion = process.env.VERSION;  // Store the original version
             while (tagExists) {
-              const parts = newVersion.split('.');
+              const parts = process.env.VERSION.split('.');
               parts[2] = (parseInt(parts[2]) + 1).toString();
-              newVersion = parts.join('.');
-              tagExists = releases.some(release => release.tag_name === newVersion);
+              process.env.VERSION = parts.join('.');
+              tagExists = releases.some(release => release.tag_name === process.env.VERSION);
             }
-            // Store the new version in an environment variable
-            console.log(`Setting VERSION=${newVersion}`);
-            fs.appendFileSync(process.env.GITHUB_ENV, `VERSION=${newVersion}\n`);  // Use Environment Files
-        env:
-          GITHUBTOKEN: ${{ secrets.GITHUBTOKEN }}
+            core.setOutput("VERSION", process.env.VERSION);
 
   package_code:
     runs-on: ubuntu-latest
+    environment: DEV
     needs: ensure_unique_tag
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          ref: main
+
       - name: Package the code
         run: |
-          # Ensure the VERSION is set correctly from the environment
-          VERSION="${{ env.VERSION }}"
-          echo "Packaging code with version: $VERSION"
-          if [ -n "$VERSION" ]; then
-            zip -r TEST-"$VERSION".zip .
+          echo "Packaging version: ${{ steps.ensure_unique_tag.outputs.VERSION }}"
+          # Check if there are any files to zip
+          if [ -n "$(ls -A .)" ]; then
+            zip -r DATAFLOW-${{ steps.ensure_unique_tag.outputs.VERSION }}.zip . -x "*.git*"
           else
-            echo "Error: VERSION is not set. Exiting."
-            exit 1
+            echo "No files to zip."
+            exit 1  # Exit with error code if nothing to zip
           fi
+
+  create_release:
+    runs-on: ubuntu-latest
+    environment: DEV
+    needs: package_code
+
+    steps:
+      - name: Create GitHub release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ steps.ensure_unique_tag.outputs.VERSION }}  # Set tag name
+          release_name: Release ${{ steps.ensure_unique_tag.outputs.VERSION }}  # Set release name
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}  # Use the saved token
+
+  upload_release_asset:
+    runs-on: ubuntu-latest
+    environment: DEV
+    needs: create_release
+
+    steps:
+      - name: Upload to GitHub release
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./DATAFLOW-${{ steps.ensure_unique_tag.outputs.VERSION }}.zip
+          asset_name: DATAFLOW-${{ steps.ensure_unique_tag.outputs.VERSION }}.zip
+          asset_content_type: application/zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}  # Use the saved token
