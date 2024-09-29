@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'py/**'
+      - 'sql/**'
 
 jobs:
   checkout:
@@ -97,26 +98,9 @@ jobs:
     needs: ensure_unique_tag
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-        with:
-          ref: main
-
       - name: Package the code
         run: |
-          echo "Packaging version: ${{ steps.ensure_unique_tag.outputs.VERSION }}"
-
-          # Debug: List the current directory contents
-          echo "Current directory contents:"
-          ls -al
-          
-          # Check if there are any files to zip
-          if [ -n "$(ls -A .)" ]; then
-            zip -r DATAFLOW-${{ steps.ensure_unique_tag.outputs.VERSION }}.zip . -x "*.git*"
-          else
-            echo "No files to zip."
-            exit 1  # Exit with error code if nothing to zip
-          fi
+          zip -r TEST-${{ steps.ensure_unique_tag.outputs.VERSION }}.zip .
 
   create_release:
     runs-on: ubuntu-latest
@@ -128,12 +112,12 @@ jobs:
         id: create_release
         uses: actions/create-release@v1
         with:
-          tag_name: ${{ steps.ensure_unique_tag.outputs.VERSION }}  # Set tag name
-          release_name: Release ${{ steps.ensure_unique_tag.outputs.VERSION }}  # Set release name
+          tag_name: ${{ steps.ensure_unique_tag.outputs.VERSION }}
+          release_name: Release ${{ steps.ensure_unique_tag.outputs.VERSION }}
           draft: false
           prerelease: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}  # Use the saved token
+          GITHUBTOKEN: ${{ secrets.GITHUBTOKEN }}
 
   upload_release_asset:
     runs-on: ubuntu-latest
@@ -145,8 +129,8 @@ jobs:
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./DATAFLOW-${{ steps.ensure_unique_tag.outputs.VERSION }}.zip
-          asset_name: DATAFLOW-${{ steps.ensure_unique_tag.outputs.VERSION }}.zip
+          asset_path: ./TEST-${{ steps.ensure_unique_tag.outputs.VERSION }}.zip
+          asset_name: TEST-${{ steps.ensure_unique_tag.outputs.VERSION }}.zip
           asset_content_type: application/zip
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}  # Use the saved token
+          GITHUBTOKEN: ${{ secrets.GITHUBTOKEN }}
