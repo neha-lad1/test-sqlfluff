@@ -99,7 +99,7 @@ jobs:
     steps:
       - name: Package the code
         run: |
-          zip -r DATAFLOW-${{ steps.ensure_unique_tag.outputs.VERSION }}.zip .
+          zip -r DATAFLOW-${{ steps.ensure_unique_tag.outputs.VERSION }}.zip ./py
 
   create_release:
     runs-on: ubuntu-latest
