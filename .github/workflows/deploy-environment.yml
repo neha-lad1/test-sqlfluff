@@ -1,0 +1,25 @@
+name: "Deploy-Environment"
+
+on:
+  # This is a reusable workflow
+  workflow_call:
+    inputs: 
+      environment:
+        description: "Name of the environment to deploy"
+        required: true
+        type: string
+      release_version:
+        description: "Release version to deploy"
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ${{ github.event.inputs.environment == 'TEST' && vars.RUNNER_NAME_TEST || (github.event.inputs.environment == 'STG' && vars.RUNNER_NAME_STG || vars.RUNNER_NAME_PROD) }}
+    environment: ${{ github.event.inputs.environment }}
+
+    steps:
+    - name: Set up environment
+      run: |
+        echo "RELEASE_VERSION=${{ github.event.inputs.release_version }}" >> $GITHUB_ENV
+        echo "Deploying release ${{ github.event.inputs.release_version }} to ${{ github.event.inputs.environment }}"
