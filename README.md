@@ -164,4 +164,4 @@ Contributions are welcome! If you'd like to improve this workflow or add new fea
 4. Submit a **pull request** explaining the updates you've made.
 
 
-This README file now reflects the workflow for the **Test**, **Staging**, and **Production** environments and provides clear guidelines for understanding and using the CI/CD pipeline effectively.
+This README file reflects the workflow for the **Test**, **Staging**, and **Production** environments and provides clear guidelines for understanding and using the CI/CD pipeline effectively.
