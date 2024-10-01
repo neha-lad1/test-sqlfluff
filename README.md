@@ -22,7 +22,7 @@ Welcome to the **CICD (Test, Staging, Production)** Power BI GitHub Workflow. Th
 
 Before you can use this workflow, make sure to have the following:
 - A **GitHub repository** set up and accessible.
-- Basic understanding of **GitHub Actions** and **YAML syntax**.
+- Basic understanding of **GitHub Actions** and **YAML, Config file syntax**.
 - All necessary **secrets** configured in your repository's settings to support build and deployment processes.
   
 ## Workflow Overview
