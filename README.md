@@ -1,102 +1,90 @@
-```markdown
-# CICD (Dev, Staging, Prod) Workflow
+# CICD Workflow for Dev, Staging, and Prod
 
-## Table of Contents
-- [Introduction](#introduction)
-- [Prerequisites](#prerequisites)
-- [Workflow Overview](#workflow-overview)
-- [Triggering the Workflow](#triggering-the-workflow)
-  - [Push Events](#push-events)
-  - [Manual Dispatch](#manual-dispatch)
-- [Jobs and Steps](#jobs-and-steps)
-  - [Build Job](#build-job)
-  - [Print Release Version Job](#print-release-version-job)
-  - [Deployment Jobs](#deployment-jobs)
-- [Environment Variables and Secrets](#environment-variables-and-secrets)
-- [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
+## Overview
 
-## Introduction
-Welcome to the CICD (Dev, Staging, Prod) GitHub Workflow. This workflow is designed to automate the build, test, and deployment processes for your project across different environments.
+This GitHub Actions workflow automates the continuous integration and deployment (CICD) process across three environments: Development (Dev), Testing (Test), and Production (Prod). The workflow is triggered on pushes to the `develop` branch and can also be manually triggered using the `workflow_dispatch` event.
 
-## Prerequisites
-Before using this workflow:
-- Ensure you have a GitHub repository set up.
-- Familiarize yourself with GitHub Actions and YAML syntax.
-- Set up necessary secrets in your repository settings if required by the workflow.
+## Workflow Structure
 
-## Workflow Overview
-This workflow automates the following processes:
-- Builds your project.
-- Prints the selected release version.
-- Deploys your project to DEV and TEST environments.
+- **Trigger**: The workflow triggers automatically on pushes to the `develop` branch. It can also be manually invoked using the workflow dispatch feature by selecting a release version.
+- **Stages**:
+  - **Build**: This job builds the project using the specified release version.
+  - **Print Release Version**: This job prints the release version selected for the deployment.
+  - **Dev Deploy**: Deploys the selected release to the Dev environment.
+  - **Test Deploy**: Deploys the selected release to the Test environment after successful deployment to Dev.
 
-## Triggering the Workflow
+## Workflow Triggers
 
-### Push Events
-The workflow is triggered automatically when there is a push event on the `develop` branch.
+### 1. **Automatic Trigger**
+The workflow will automatically run whenever there is a push to the `develop` branch.
 
-### Manual Dispatch
-You can also manually trigger this workflow using the "Run workflow" button on GitHub. When doing so, you will be prompted to select a release version from a list of predefined options.
+### 2. **Manual Trigger**
+You can manually trigger the workflow from the GitHub Actions tab using the `workflow_dispatch` event. This requires selecting the release version to deploy.
 
-## Jobs and Steps
+### Inputs for Manual Trigger:
+- **release_version**: Select the version of the release from the following options:
+  - `v1.0.0`
+  - `v1.0.1`
+  - `v1.0.2`
+  - `v1.0.3`
+  - `v1.0.4`
+  - `v1.0.5`
 
-### Build Job
-The `build` job uses another workflow file located at `./.github/workflows/build.yml`. It takes an input parameter `release_version` which is passed from either the push event or manual dispatch.
+## Workflow Breakdown
 
-```yaml
-build:
-  uses: ./.github/workflows/build.yml
-  with:
-    release_version: ${{ github.event.inputs.release_version }}
-  secrets: inherit
-```
+### Jobs
 
-### Print Release Version Job
-This job prints out the selected release version after the build job has completed.
+1. **Build**
+   - **Description**: This job runs the build process for the application.
+   - **Usage**: Reuses the `build.yml` file from `.github/workflows/`.
+   - **Input**: Takes `release_version` as input from the workflow dispatch.
+   - **Secrets**: Inherits secrets for secure credentials and access.
 
-```yaml
-print-release:
-  needs: build
-  runs-on: ubuntu-latest
-  steps:
-    - name: Print Release Version
-      run: |
-        echo "Selected release for deployment: ${{ needs.build.outputs.release_version }}"
-```
+2. **Print Release Version**
+   - **Description**: Prints the selected release version.
+   - **Dependency**: This job depends on the `build` job and uses its output (`release_version`).
+   - **Steps**: A simple echo command to output the release version.
 
-### Deployment Jobs
-There are two deployment jobs: one for DEV environment and another for TEST environment. Both jobs use another workflow file located at `./.github/workflows/deploy-environment.yml`.
+3. **Dev Deploy**
+   - **Description**: Deploys the built application to the Dev environment.
+   - **Usage**: Reuses the `deploy-environment.yml` file from `.github/workflows/`.
+   - **Dependency**: Runs after the `build` job.
+   - **Input**: Takes `environment: DEV` and `release_version` as input.
+   - **Secrets**: Inherits necessary secrets for deployment.
 
-```yaml
-dev-deploy:
-  needs: build
-  uses: ./.github/workflows/deploy-environment.yml
-  with:
-    environment: DEV
-    release_version: ${{ needs.build.outputs.release_version }}
-  secrets: inherit
+4. **Test Deploy**
+   - **Description**: Deploys the built application to the Test environment after successful Dev deployment.
+   - **Usage**: Reuses the `deploy-environment.yml` file from `.github/workflows/`.
+   - **Dependency**: Runs after both the `build` and `dev-deploy` jobs.
+   - **Input**: Takes `environment: TEST` and `release_version` as input.
+   - **Secrets**: Inherits necessary secrets for deployment.
 
-test-deploy:
-  needs: [build, dev-deploy]
-  uses: ./.github/workflows/deploy-environment.yml
-  with:
-    environment: TEST
-    release_version: ${{ needs.build.outputs.release_version }}
-  secrets: inherit
-```
+## How to Trigger the Workflow Manually
 
-## Environment Variables and Secrets
-The workflow uses inherited secrets from your repository settings. Ensure that all necessary secrets are configured in your repository settings before running this workflow.
+1. Go to the **Actions** tab in the GitHub repository.
+2. Select the **CICD (Dev, Staging, Prod)** workflow from the list.
+3. Click the **Run workflow** button.
+4. Choose the **release_version** from the drop-down list.
+5. Click **Run workflow** to manually start the pipeline.
 
-## Troubleshooting
-If you encounter any issues during the execution of this workflow:
-- Check the logs of each job step to identify where things went wrong.
-- Verify that all required secrets are correctly set up in your repository settings.
-- Ensure that dependencies and environment configurations are correct in your build and deployment scripts.
+## Secrets and Permissions
 
-## Contributing
-To contribute to this project or modify this workflow:
-- Fork this repository.
-- Make necessary changes or additions.
-- Submit a pull request with detailed explanations of your changes.
+The workflow uses GitHub Secrets for sensitive information such as environment credentials, which are inherited for each job. Make sure the following secrets are configured in your repository settings:
+- **DEV_ENV_SECRET**
+- **TEST_ENV_SECRET**
+- **PROD_ENV_SECRET**
+
+> **Note**: Ensure that secrets are correctly set up to avoid deployment issues.
+
+## Environment-Specific Configurations
+
+- **Dev Deployment**: The deployment will occur in the Development environment first.
+- **Test Deployment**: After the Dev deployment is successful, the application is deployed to the Test environment.
+- **Prod Deployment** (Future Implementation): The Prod deployment will be added later and will follow a similar pattern as the Dev and Test deployments.
+
+## Rollback and Monitoring
+
+If there are any issues during deployment, you can roll back the deployment by:
+- Re-running the workflow with a previous `release_version`.
+- Contacting the DevOps team for assistance in handling rollback scenarios.
+
