@@ -1,5 +1,3 @@
-Here is the complete README.md content based on the structure and details provided earlier:
-
 ```markdown
 # CICD (Dev, Staging, Prod) Workflow
 
