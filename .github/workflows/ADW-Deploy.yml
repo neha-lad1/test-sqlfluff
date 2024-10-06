@@ -144,8 +144,8 @@ jobs:
         PROJECT_NAME: ${{ github.event.inputs.project_name }}
         DEPLOY_VERSION: ${{ github.event.inputs.release_version }}
       run: |
-        if find ./ADW/${DEPLOY_VERSION}/${{ github.event.inputs.project_name }}/tables/external -type f -name "*.sql" | grep -q .; then
-          for file in ./ADW/${DEPLOY_VERSION}/${{ github.event.inputs.project_name }}/tables/external/*.sql; do
+        if find ./ADW/${{ github.event.inputs.release_version }}/${{ github.event.inputs.project_name }}/tables/external -type f -name "*.sql" | grep -q .; then
+          for file in ./ADW/${{ github.event.inputs.release_version }}/${{ github.event.inputs.project_name }}/tables/external/*.sql; do
             sed -i "s/CREDENTIAL_NAME/$CREDENTIAL_NAME/g" "$file"
             sed -i "s/RAW_BUCKET/$RAW_BUCKET/g" "$file"
             sed -i "s/CURATED_BUCKET/$CURATED_BUCKET/g" "$file"
