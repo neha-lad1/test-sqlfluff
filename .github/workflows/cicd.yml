@@ -1,0 +1,55 @@
+name: CICD (Dev, Test, Staging, Prod)
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - 'Reports/**'
+      - '.github/config/**'
+      - 'scripts/**'
+  
+  workflow_dispatch:
+    inputs:
+      release_version:
+        type: choice
+        description: Select the release version
+        required: true
+        options:
+          - v1.0.0
+          - v1.0.1
+          - v1.0.2
+          - v1.0.3
+          - v1.0.4
+          - v1.0.5    
+jobs:
+  
+  package:
+    uses: ./.github/workflows/package.yml
+    with:
+      release_version: ${{ github.event.inputs.release_version }}
+    secrets: inherit
+
+  print-release:
+    needs: package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print Release Version
+        run: |
+          echo "Selected release for deployment: ${{ needs.package.outputs.release_version }}"
+
+  dev-deploy:
+    needs: package
+    uses: ./.github/workflows/deploy-environment.yml
+    with:
+      environment: DEV
+      release_version: ${{ needs.package.outputs.release_version }}
+    secrets: inherit
+
+  test-deploy:
+    needs: [package, dev-deploy]
+    uses: ./.github/workflows/deploy-environment.yml
+    with:
+      environment: TEST
+      release_version: ${{ needs.package.outputs.release_version }}
+    secrets: inherit
