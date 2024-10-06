@@ -137,19 +137,15 @@ jobs:
         RAW_BUCKET: ${{ vars.RAW_BUCKET }}
         PRESENTATION_BUCKET: ${{vars.PRESENTATION_BUCKET}}
         NAMESPACE: ${{ secrets.NAMESPACE }}
-        CURATED_PRE_AUTH: ${{ secrets.CURATED_PRE_AUTH }}
-        RAW_PRE_AUTH: ${{ secrets.RAW_PRE_AUTH }}
-        PRESENTATION_PRE_AUTH: ${{secrets.PRESENTATION_PRE_AUTH}}
         WNAME: ${{ secrets.WNAME }}
         ENV: ${{ secrets.ADW_ENV }}
         DB_USERNAME: ${{ github.event.inputs.project_name }}
         DB_PASSWORD: "${{ env.db_credentials }}"
         PROJECT_NAME: ${{ github.event.inputs.project_name }}
         DEPLOY_VERSION: ${{ github.event.inputs.release_version }}
-        VERSIONID: ${{ env.DEPLOY_VERSION }}
       run: |
-        if find ./ADW/${VERSIONID}/${{ github.event.inputs.project_name }}/tables/external -type f -name "*.sql" | grep -q .; then
-          for file in ./ADW/${VERSIONID}/${{ github.event.inputs.project_name }}/tables/external/*.sql; do
+        if find ./ADW/${DEPLOY_VERSION}/${{ github.event.inputs.project_name }}/tables/external -type f -name "*.sql" | grep -q .; then
+          for file in ./ADW/${DEPLOY_VERSION}/${{ github.event.inputs.project_name }}/tables/external/*.sql; do
             sed -i "s/CREDENTIAL_NAME/$CREDENTIAL_NAME/g" "$file"
             sed -i "s/RAW_BUCKET/$RAW_BUCKET/g" "$file"
             sed -i "s/CURATED_BUCKET/$CURATED_BUCKET/g" "$file"
