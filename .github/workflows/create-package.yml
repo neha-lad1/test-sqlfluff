@@ -22,7 +22,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
       with:
-        ref: develop
+        ref: main
 
     - name: Determine initial version
       id: get_initial_version
@@ -83,7 +83,7 @@ jobs:
   
     - name: Package the code
       run: |
-        zip -r PBI-${{ steps.ensure_unique_tag.outputs.VERSION }}.zip .
+        zip -r ADW-${{ steps.ensure_unique_tag.outputs.VERSION }}.zip .
 
     - name: check the file loaction
       run: ls -l
@@ -97,17 +97,17 @@ jobs:
         draft: false
         prerelease: false
       env:
-        GITHUB_TOKEN: ${{ secrets.G_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}
 
     - name: Upload to GitHub release
       uses: actions/upload-release-asset@v1
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./PBI-${{ steps.ensure_unique_tag.outputs.VERSION }}.zip
-        asset_name: PBI-${{ steps.ensure_unique_tag.outputs.VERSION }}.zip
+        asset_path: ./ADW-${{ steps.ensure_unique_tag.outputs.VERSION }}.zip
+        asset_name: ADW-${{ steps.ensure_unique_tag.outputs.VERSION }}.zip
         asset_content_type: application/zip
       env:
-        GITHUB_TOKEN: ${{ secrets.G_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}
 
     - name: Set Release Version
       id: set-release
