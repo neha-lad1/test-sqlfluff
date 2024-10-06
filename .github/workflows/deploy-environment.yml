@@ -12,15 +12,11 @@ on:
         description: "Release version to deploy"
         required: true
         type: string
-      deployment_config:
-        description: 'Deployment configuration in JSON format'
+      project_name:
+        description: 'Name of the Project to deploy'
         required: true
-        default: |
-          {
-            "environment": "TEST",
-            "release_version": "",
-            "project_name": "WATER_DM"
-          }
+        default: 
+        type: string
 
 jobs:
   deploy:
@@ -30,9 +26,25 @@ jobs:
     steps:
     - name: Set up environment
       run: |
-        echo -e "ENVIRONMENT=$(echo ${{ github.event.inputs.deployment_config }} | jq -r '.environment')" >> $GITHUB_ENV
-        echo -e "RELEASE_VERSION=$(echo ${{ github.event.inputs.deployment_config }} | jq -r '.release_version')" >> $GITHUB_ENV
-        echo -e "PROJECT_NAME=$(echo ${{ github.event.inputs.deployment_config }} | jq -r '.project_name')" >> $GITHUB_ENV
+       echo "ENVIRONMENT=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
+       echo "RELEASE_VERSION=${{ github.event.inputs.release_version }}" >> $GITHUB_ENV
+       echo "PROJECT_NAME=${{ github.event.inputs.project_name }}" >> $GITHUB_ENV
+    
+    - name: Get latest release (if release_version is not specified)
+      id: get_latest_release
+      if: github.event.inputs.release_version == ''
+      uses: actions/github-script@v4
+      with:
+      script: |
+        const latestRelease = await github.repos.getLatestRelease({
+        owner: context.repo.owner,
+        repo: context.repo.repo
+        });
+        return latestRelease.data.tag_name;
+
+    - name: Set release version to latest (if release_version is not specified)
+      if: github.event.inputs.release_version == ''
+      run: echo "RELEASE_VERSION=${{ steps.get_latest_release.outputs.result }}" >> $GITHUB_ENV
 
     - name: Ensure permissions
       run: chmod -R u+rwx ${{ github.workspace }}
