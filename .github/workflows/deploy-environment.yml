@@ -41,10 +41,6 @@ jobs:
         latest: false
         extract: true
 
-    - name: Remove line terminators
-      run: |
-        sed -i 's/\r//g' .github/config/workspace-deploy-config.yaml
-
     - name: Configure OCI CLI
       run: |
         mkdir -p ~/.oci
