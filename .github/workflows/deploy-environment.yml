@@ -12,6 +12,15 @@ on:
         description: "Release version to deploy"
         required: true
         type: string
+      deployment_config:
+        description: 'Deployment configuration in JSON format'
+        required: true
+        default: |
+          {
+            "environment": "TEST",
+            "release_version": "",
+            "project_name": "WATER_DM"
+          }
 
 jobs:
   deploy:
@@ -21,8 +30,9 @@ jobs:
     steps:
     - name: Set up environment
       run: |
-        echo "RELEASE_VERSION=${{ inputs.release_version }}" >> $GITHUB_ENV
-        echo "Deploying release ${{ inputs.release_version }} to ${{ inputs.environment }}"
+        echo -e "ENVIRONMENT=$(echo ${{ github.event.inputs.deployment_config }} | jq -r '.environment')" >> $GITHUB_ENV
+        echo -e "RELEASE_VERSION=$(echo ${{ github.event.inputs.deployment_config }} | jq -r '.release_version')" >> $GITHUB_ENV
+        echo -e "PROJECT_NAME=$(echo ${{ github.event.inputs.deployment_config }} | jq -r '.project_name')" >> $GITHUB_ENV
 
     - name: Ensure permissions
       run: chmod -R u+rwx ${{ github.workspace }}
