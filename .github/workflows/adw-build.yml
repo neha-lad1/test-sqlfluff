@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ github.event.inputs.environment == 'TEST' && vars.RUNNER_NAME_TEST || (github.event.inputs.environment == 'STG' && vars.RUNNER_NAME_STG || vars.RUNNER_NAME_PROD) }}
+    runs-on: ubuntu-latest
     environment: DEV
 
     steps:
