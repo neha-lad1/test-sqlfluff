@@ -3,11 +3,10 @@ name: CICD (Dev, Test, Staging, Prod)
 on:
   push:
     branches:
-      - develop
+      - main
     paths:
-      - 'Reports/**'
-      - '.github/config/**'
-      - 'scripts/**'
+      - 'ADW/**'
+      - 'Test/**'
   
   workflow_dispatch:
     inputs:
@@ -21,7 +20,20 @@ on:
           - v1.0.2
           - v1.0.3
           - v1.0.4
-          - v1.0.5    
+          - v1.0.5  
+      project_name:
+          type: choice
+          description: Select the project you wish to deploy
+          default: ''
+          required: true
+          options:
+            - WATER_DM
+            - OPERATIONS_DM
+            - SOURCE_DM
+            - COMMON_DM
+            - WQD_DM
+            - ENERGY_DM
+
 jobs:
   
   package:
