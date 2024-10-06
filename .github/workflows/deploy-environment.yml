@@ -15,8 +15,8 @@ on:
 
 jobs:
   deploy:
-    runs-on: ${{ inputs.environment == 'TEST' && vars.RUNNER_NAME_TEST || (inputs.environment == 'STG' && vars.RUNNER_NAME_STG || vars.RUNNER_NAME_PROD) }}
-    environment: ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    environment: DEV
 
     steps:
     - name: Set up environment
@@ -37,7 +37,7 @@ jobs:
       with:
         repository: ${{ github.repository }}
         tag: ${{ env.RELEASE_VERSION }}
-        fileName: 'PBI-${{ env.RELEASE_VERSION }}.zip'
+        fileName: 'ADW-${{ env.RELEASE_VERSION }}.zip'
         latest: false
         extract: true
 
@@ -45,30 +45,77 @@ jobs:
       run: |
         sed -i 's/\r//g' .github/config/workspace-deploy-config.yaml
 
-    - name: Overwrite config file
-      env: 
-        WORKSPACE_ID: ${{ secrets.WORKSPACE_ID }}
-      run: | 
-        var="${{ inputs.environment }}_WORKSPACE_ID"
-        sed -i "s/$var/$WORKSPACE_ID/g" ".github/config/workspace-deploy-config.yaml"
-
-    - name: Setup Workspace
+    - name: Configure OCI CLI
       run: |
-        if [ "${{ inputs.environment }}" == "DEV" ]; then
-          workspace="Synergyze_Dev"
-          echo "Deploying to workspace $workspace"
-          echo "WORKSPACE=$workspace" >> $GITHUB_ENV
-        elif [ "${{ inputs.environment }}" == "TEST" ]; then
-          workspace="Synergyze_Test"
-          echo "Deploying to workspace $workspace"
-          echo "WORKSPACE=$workspace" >> $GITHUB_ENV
-        fi
+        mkdir -p ~/.oci
+        echo "${{ secrets.OCI_PRIVATE_KEY }}" | base64 --decode > ~/.oci/oci_api_key.pem
+        chmod 600 ~/.oci/oci_api_key.pem
+        echo "[DEFAULT]" > ~/.oci/config
+        echo "user=${{ secrets.OCI_USER_OCID }}" >> ~/.oci/config
+        echo "fingerprint=${{ secrets.OCI_FINGERPRINT }}" >> ~/.oci/config
+        echo "key_file=~/.oci/oci_api_key.pem" >> ~/.oci/config
+        echo "tenancy=${{ secrets.OCI_TENANCY_OCID }}" >> ~/.oci/config
+        echo "region=${{ secrets.OCI_REGION }}" >> ~/.oci/config
+ 
+    - name: Set execute permissions
+      run: chmod +x ./DevOps/plsql/main.sh
 
-    - name: Deploy to Power BI workspace
+    - name: Remove line terminators
+      run: sed -i 's/\r//g' ./DevOps/plsql/main.sh
+
+    - name: Retrieve schema credentials from OCI Vault
+      run: |
+        case "${{ github.event.inputs.project_name }}" in
+          WATER_DM)
+            SECRET_ID="${{ secrets.WATER_DM_SECRET }}"
+            ;;
+          OPERATIONS_DM)
+            SECRET_ID="${{ secrets.OPERATIONS_DM_SECRET }}"
+            ;;
+          SOURCE_DM)
+            SECRET_ID="${{ secrets.SOURCE_DM_SECRET }}"
+            ;;
+          COMMON_DM)
+            SECRET_ID="${{ secrets.COMMON_DM_SECRET }}"
+            ;;
+          WQD_DM)
+            SECRET_ID="${{ secrets.WQD_DM_SECRET }}"
+            ;;
+          ENERGY_DM)
+            SECRET_ID="${{ secrets.ENERGY_DM_SECRET }}"
+            ;;
+          *)
+            echo "Unknown project name: ${{ github.event.inputs.project_name }}"
+            exit 1
+            ;;
+        esac
+        echo "Checking the valut pass here"
+        DB_CREDENTIALS=$(oci secrets secret-bundle get --secret-id "$SECRET_ID" --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
+        echo "db_credentials=$DB_CREDENTIALS" >> $GITHUB_ENV
+    
+    - name: Define variables and secrets
       env:
-        CONFIG_PATH: '.github/config/workspace-deploy-config.yaml'
-        TENANT_ID: ${{ secrets.TENANT_ID }}
-        CLIENT_ID: ${{ secrets.CLIENT_ID }}
-        CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
-      run: | 
-        python ./scripts/pbi.py
+        WORKSPACE: ${{ vars.WORKSPACE }}
+        SCRIPT_DIR: ${{ vars.SCRIPT_DIR }}
+        CREDENTIAL_NAME: ${{ secrets.CREDENTIAL_NAME }}
+        CURATED_BUCKET: ${{ vars.CURATED_BUCKET }}
+        RAW_BUCKET: ${{ vars.RAW_BUCKET }}
+        PRESENTATION_BUCKET: ${{vars.PRESENTATION_BUCKET}}
+        NAMESPACE: ${{ secrets.NAMESPACE }}
+        WNAME: ${{ secrets.WNAME }}
+        ENV: ${{ secrets.ADW_ENV }}
+        DB_USERNAME: ${{ github.event.inputs.project_name }}
+        DB_PASSWORD: "${{ env.db_credentials }}"
+        PROJECT_NAME: ${{ github.event.inputs.project_name }}
+        DEPLOY_VERSION: ${{ github.event.inputs.release_version }}
+      run: |
+        if find ./ADW/${{ github.event.inputs.release_version }}/${{ github.event.inputs.project_name }}/tables/external -type f -name "*.sql" | grep -q .; then
+          for file in ./ADW/${{ github.event.inputs.release_version }}/${{ github.event.inputs.project_name }}/tables/external/*.sql; do
+            sed -i "s/CREDENTIAL_NAME/$CREDENTIAL_NAME/g" "$file"
+            sed -i "s/RAW_BUCKET/$RAW_BUCKET/g" "$file"
+            sed -i "s/CURATED_BUCKET/$CURATED_BUCKET/g" "$file"
+            sed -i "s/PRESENTATION_BUCKET/$PRESENTATION_BUCKET/g" "$file"
+            sed -i "s/NAMESPACE/$NAMESPACE/g" "$file"
+        done
+        fi
+  
