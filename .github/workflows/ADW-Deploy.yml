@@ -62,6 +62,11 @@ jobs:
     - name: Set release version to latest (if release_version is not specified)
       if: github.event.inputs.release_version == ''
       run: echo "RELEASE_VERSION=${{ steps.get_latest_release.outputs.result }}" >> $GITHUB_ENV
+    - name: Set up environment variables
+      run: | 
+       echo "Setting up variables..."
+       export VERSIONID=${{ env.release_version }}
+       echo "Deploy version is $VERSIONID"
 
     - name: Ensure permissions
       run: chmod -R u+rwx ${{ github.workspace }}
@@ -144,7 +149,7 @@ jobs:
         ENV: ${{ secrets.ADW_ENV }}
         DB_USERNAME: ${{ github.event.inputs.project_name }}
         DB_PASSWORD: "${{ env.db_credentials }}"
-        VERSIONID: ${{ vars.VERSIONID }}
+        VERSIONID: ${{ env.VERSIONID }}
         PROJECT_NAME: ${{ github.event.inputs.project_name }}
         DEPLOY_VERSION: ${{ github.event.inputs.release_version }}
       run: |
