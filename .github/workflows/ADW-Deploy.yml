@@ -65,7 +65,7 @@ jobs:
     - name: Set up environment variables
       run: | 
        echo "Setting up variables..."
-       export VERSIONID=${{ env.release_version }}
+       export VERSIONID=${{ env.RELEASE_VERSION }}
        echo "Deploy version is $VERSIONID"
 
     - name: Ensure permissions
