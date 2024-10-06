@@ -62,11 +62,6 @@ jobs:
     - name: Set release version to latest (if release_version is not specified)
       if: github.event.inputs.release_version == ''
       run: echo "RELEASE_VERSION=${{ steps.get_latest_release.outputs.result }}" >> $GITHUB_ENV
-    - name: Set up environment variables
-      run: | 
-       echo "Setting up variables..."
-       export VERSIONID=${{ env.RELEASE_VERSION }}
-       echo "Deploy version is $VERSIONID"
 
     - name: Ensure permissions
       run: chmod -R u+rwx ${{ github.workspace }}
@@ -149,20 +144,17 @@ jobs:
         ENV: ${{ secrets.ADW_ENV }}
         DB_USERNAME: ${{ github.event.inputs.project_name }}
         DB_PASSWORD: "${{ env.db_credentials }}"
-        VERSIONID: ${{ env.VERSIONID }}
         PROJECT_NAME: ${{ github.event.inputs.project_name }}
         DEPLOY_VERSION: ${{ github.event.inputs.release_version }}
+        VERSIONID: ${{ env.DEPLOY_VERSION }}
       run: |
         if find ./ADW/${VERSIONID}/${{ github.event.inputs.project_name }}/tables/external -type f -name "*.sql" | grep -q .; then
           for file in ./ADW/${VERSIONID}/${{ github.event.inputs.project_name }}/tables/external/*.sql; do
             sed -i "s/CREDENTIAL_NAME/$CREDENTIAL_NAME/g" "$file"
             sed -i "s/RAW_BUCKET/$RAW_BUCKET/g" "$file"
-            sed -i "s/RAW_PRE_AUTH/$RAW_PRE_AUTH/g" "$file"
             sed -i "s/CURATED_BUCKET/$CURATED_BUCKET/g" "$file"
-            sed -i "s/CURATED_PRE_AUTH/$CURATED_PRE_AUTH/g" "$file"
             sed -i "s/PRESENTATION_BUCKET/$PRESENTATION_BUCKET/g" "$file"
-            sed -i "s/PRESENTATION_PRE_AUTH/$PRESENTATION_PRE_AUTH/g" "$file"
             sed -i "s/NAMESPACE/$NAMESPACE/g" "$file"
         done
         fi
-        ./DevOps/plsql/main.sh
+  
