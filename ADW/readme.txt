@@ -1,9 +1,4 @@
-ADW
-
-
-Add SQL's
-
-
+Add all type of SQL's here
 
 
 
