@@ -15,7 +15,6 @@ on:
       project_name:
         description: 'Name of the Project to deploy'
         required: true
-        default: 
         type: string
 
 jobs:
@@ -30,17 +29,6 @@ jobs:
        echo "RELEASE_VERSION=${{ github.event.inputs.release_version }}" >> $GITHUB_ENV
        echo "PROJECT_NAME=${{ github.event.inputs.project_name }}" >> $GITHUB_ENV
     
-    - name: Get latest release (if release_version is not specified)
-      id: get_latest_release
-      if: github.event.inputs.release_version == ''
-      uses: actions/github-script@v4
-      with:
-      script: |
-        const latestRelease = await github.repos.getLatestRelease({
-        owner: context.repo.owner,
-        repo: context.repo.repo
-        });
-        return latestRelease.data.tag_name;
 
     - name: Set release version to latest (if release_version is not specified)
       if: github.event.inputs.release_version == ''
