@@ -1,41 +1,67 @@
-name: Package Workflow
+name: CICD (Dev, Test, Staging, Prod)
 
 on:
-  workflow_call:
+  push:
+    branches:
+      - main
+    paths:
+      - 'ADW/**'
+      - 'Test/**'
+  
+  workflow_dispatch:
     inputs:
       release_version:
+        type: choice
+        description: Select the release version
         required: true
-        type: string
-      project_name:
+        options:
+          - v1.0.0
+          - v1.0.1
+          - v1.0.2
+          - v1.0.3
+          - v1.0.4
+          - v1.0.5  
+      project_as_json:
+        description: "JSON input of projects"
         required: true
-        type: string
-    outputs:
-      release_version:
-          description: 'Output from child workflow'
-          value: ${{ jobs.prepare-release.outputs.release_version }}
+        default: '{ "WATER_DM": "", "OPERATIONS_DM": "", "ENERGY_DM": "", "WQD_DM": "", "SOURCE_DM": "", "COMMON_DM": "" }'
 
 jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up environment variables
+        run: |
+          echo "JSON_INPUT=${{ github.event.inputs.project_as_json }}" >> $GITHUB_ENV
+          echo "PROJECT_NAME=WATER_DM" >> $GITHUB_ENV  # Set the project name here
+          echo "SELECTED_PROJECT=$(echo $JSON_INPUT | jq -r '.[$PROJECT_NAME]')" >> $GITHUB_ENV
 
-  create-package:
-    if: ${{ inputs.release_version == '' }} 
-    uses: ./.github/workflows/create-package.yml
+      - name: Call package workflow
+        uses: ./.github/workflows/package.yml
+        with:
+          release_version: ${{ github.event.inputs.release_version }}
+          project_name: ${{ env.PROJECT_NAME }}  # Pass the project name here
+
+  print-release:
+    needs: package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print Release Version
+        run: |
+          echo "Selected release for deployment: ${{ needs.package.outputs.release_version }}"
+
+  dev-deploy:
+    needs: package
+    uses: ./.github/workflows/deploy-environment.yml
+    with:
+      environment: DEV
+      release_version: ${{ needs.package.outputs.release_version }}
     secrets: inherit
 
-  prepare-release:
-    needs: create-package
-    if: always() && (needs.create-package.result == 'skipped' || needs.create-package.result == 'success')
-    runs-on: ubuntu-latest
-    outputs:
-      release_version: ${{ steps.step1.outputs.release_version }}
-    steps:
-      - name: Set release version
-        id: step1
-        run: |
-          if [ "${{ inputs.release_version }}" != "" ]; then
-            echo "Manually triggered"
-            echo "release_version=${{ inputs.release_version }}" >> $GITHUB_OUTPUT
-          else
-            echo "Auto triggered"
-            echo "release_version=${{ needs.create-package.outputs.release_version }}" >> $GITHUB_OUTPUT
-          fi 
-
+  test-deploy:
+    needs: [package, dev-deploy]
+    uses: ./.github/workflows/deploy-environment.yml
+    with:
+      environment: TEST
+      release_version: ${{ needs.package.outputs.release_version }}
+    secrets: inherit
