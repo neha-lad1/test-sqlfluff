@@ -7,7 +7,7 @@ on:
     paths:
       - 'ADW/**'
       - 'Test/**'
-  
+
   workflow_dispatch:
     inputs:
       release_version:
@@ -20,23 +20,26 @@ on:
           - v1.0.2
           - v1.0.3
           - v1.0.4
-          - v1.0.5  
+          - v1.0.5
       project_as_json:
         description: "JSON input of projects"
         required: true
         default: '{ "WATER_DM": "", "OPERATIONS_DM": "", "ENERGY_DM": "", "WQD_DM": "", "SOURCE_DM": "", "COMMON_DM": "" }'
 
-
 jobs:
-  
+
   package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up environment variables
+        run: |
+          echo "JSON_INPUT=${{ github.event.inputs.project_as_json }}" >> $GITHUB_ENV
+          echo "PROJECT_NAME=WATER_DM" >> $GITHUB_ENV  # Replace with desired project name
+          echo "SELECTED_PROJECT=$(echo $JSON_INPUT | jq -r '.[$PROJECT_NAME]')" >> $GITHUB_ENV
+
     uses: ./.github/workflows/package.yml
     with:
       release_version: ${{ github.event.inputs.release_version }}
-      echo "JSON_INPUT=${{ github.event.inputs.project_as_json }}" >> $GITHUB_ENV
-      echo "PROJECT_NAME=WATER_DM" >> $GITHUB_ENV  # Replace with desired project name
-      # Extract project name and set it to an environment variable
-      echo "SELECTED_PROJECT=$(echo $JSON_INPUT | jq -r '.[$PROJECT_NAME]')" >> $GITHUB_ENV
     secrets: inherit
 
   print-release:
