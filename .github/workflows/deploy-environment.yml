@@ -12,6 +12,10 @@ on:
         description: "Release version to deploy"
         required: true
         type: string
+      project_name:
+        description: "Project name for deployment"
+        required: true
+        type: string
 
 jobs:
   deploy:
