@@ -12,10 +12,6 @@ on:
         description: "Release version to deploy"
         required: true
         type: string
-      project_name:
-        description: 'Name of the Project to deploy'
-        required: true
-        type: string
 
 jobs:
   deploy:
@@ -25,10 +21,8 @@ jobs:
     steps:
     - name: Set up environment
       run: |
-       echo "ENVIRONMENT=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
-       echo "RELEASE_VERSION=${{ github.event.inputs.release_version }}" >> $GITHUB_ENV
-       echo "PROJECT_NAME=${{ github.event.inputs.project_name }}" >> $GITHUB_ENV
-    
+        echo "RELEASE_VERSION=${{ inputs.release_version }}" >> $GITHUB_ENV
+        echo "Deploying release ${{ inputs.release_version }} to ${{ inputs.environment }}"
 
     - name: Set release version to latest (if release_version is not specified)
       if: github.event.inputs.release_version == ''
