@@ -28,19 +28,19 @@ on:
 
 jobs:
   package:
-    runs-on: ubuntu-latest  # Ensure to specify the OS for the job
+    runs-on: ubuntu-latest
     steps:
       - name: Set up environment variables
         run: |
           echo "JSON_INPUT=${{ github.event.inputs.project_as_json }}" >> $GITHUB_ENV
-          echo "PROJECT_NAME=WATER_DM" >> $GITHUB_ENV  # Replace with desired project name
+          echo "PROJECT_NAME=WATER_DM" >> $GITHUB_ENV  # Set the project name here
           echo "SELECTED_PROJECT=$(echo $JSON_INPUT | jq -r '.[$PROJECT_NAME]')" >> $GITHUB_ENV
 
-      - name: Package and Release
+      - name: Call package workflow
         uses: ./.github/workflows/package.yml
         with:
           release_version: ${{ github.event.inputs.release_version }}
-          project_name: ${{ env.PROJECT_NAME }}  # Pass the project name to the package workflow
+          project_name: ${{ env.PROJECT_NAME }}  # Pass the project name here
 
   print-release:
     needs: package
