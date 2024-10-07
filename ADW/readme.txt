@@ -1,1 +1,1 @@
-Add all type of SQL's here...!!!!!!!!!!!!!!!!!!!!!!11
+Add all type of SQL's here...!!!!!!!!!!!!!!!!!!!!!!
