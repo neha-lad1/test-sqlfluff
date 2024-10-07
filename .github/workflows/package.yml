@@ -1,4 +1,4 @@
-name: Package Workflow
+name: Package Workflow 
 
 on:
   workflow_call:
@@ -11,8 +11,8 @@ on:
         type: string
     outputs:
       release_version:
-        description: 'Output from child workflow'
-        value: ${{ jobs.prepare-release.outputs.release_version }}
+          description: 'Output from child workflow'
+          value: ${{ jobs.prepare-release.outputs.release_version }}
 
 jobs:
 
@@ -38,7 +38,3 @@ jobs:
             echo "Auto triggered"
             echo "release_version=${{ needs.create-package.outputs.release_version }}" >> $GITHUB_OUTPUT
           fi 
-
-      - name: Print Project Name
-        run: |
-          echo "Project Name: ${{ inputs.project_name }}"
