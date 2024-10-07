@@ -21,18 +21,11 @@ on:
           - v1.0.3
           - v1.0.4
           - v1.0.5  
-      project_name:
-          type: choice
-          description: Select the project you wish to deploy
-          default: ''
-          required: true
-          options:
-            - WATER_DM
-            - OPERATIONS_DM
-            - SOURCE_DM
-            - COMMON_DM
-            - WQD_DM
-            - ENERGY_DM
+      project_as_json:
+        description: "JSON input of projects"
+        required: true
+        default: '{ "WATER_DM": "", "OPERATIONS_DM": "", "ENERGY_DM": "", "WQD_DM": "", "SOURCE_DM": "", "COMMON_DM": "" }'
+
 
 jobs:
   
@@ -40,7 +33,10 @@ jobs:
     uses: ./.github/workflows/package.yml
     with:
       release_version: ${{ github.event.inputs.release_version }}
-      project_name: ${{ github.event.inputs.project_name }}
+      echo "JSON_INPUT=${{ github.event.inputs.project_as_json }}" >> $GITHUB_ENV
+      echo "PROJECT_NAME=WATER_DM" >> $GITHUB_ENV  # Replace with desired project name
+      # Extract project name and set it to an environment variable
+      echo "SELECTED_PROJECT=$(echo $JSON_INPUT | jq -r '.[$PROJECT_NAME]')" >> $GITHUB_ENV
     secrets: inherit
 
   print-release:
@@ -50,7 +46,6 @@ jobs:
       - name: Print Release Version
         run: |
           echo "Selected release for deployment: ${{ needs.package.outputs.release_version }}"
-          echo "Selected project: ${{ github.event.inputs.project_name }}"
 
   dev-deploy:
     needs: package
@@ -58,7 +53,6 @@ jobs:
     with:
       environment: DEV
       release_version: ${{ needs.package.outputs.release_version }}
-      project_name: ${{ github.event.inputs.project_name }}
     secrets: inherit
 
   test-deploy:
@@ -67,5 +61,4 @@ jobs:
     with:
       environment: TEST
       release_version: ${{ needs.package.outputs.release_version }}
-      project_name: ${{ github.event.inputs.project_name }}
     secrets: inherit
