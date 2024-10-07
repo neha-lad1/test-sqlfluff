@@ -13,7 +13,6 @@ on:
         required: true
         type: string
       project_name:
-        description: "Project name for deployment"
         required: true
         type: string
 
