@@ -7,7 +7,7 @@ on:
     paths:
       - 'ADW/**'
       - 'Test/**'
-
+  
   workflow_dispatch:
     inputs:
       release_version:
@@ -20,16 +20,15 @@ on:
           - v1.0.2
           - v1.0.3
           - v1.0.4
-          - v1.0.5
+          - v1.0.5  
       project_as_json:
         description: "JSON input of projects"
         required: true
         default: '{ "WATER_DM": "", "OPERATIONS_DM": "", "ENERGY_DM": "", "WQD_DM": "", "SOURCE_DM": "", "COMMON_DM": "" }'
 
 jobs:
-
   package:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # Ensure to specify the OS for the job
     steps:
       - name: Set up environment variables
         run: |
@@ -37,10 +36,10 @@ jobs:
           echo "PROJECT_NAME=WATER_DM" >> $GITHUB_ENV  # Replace with desired project name
           echo "SELECTED_PROJECT=$(echo $JSON_INPUT | jq -r '.[$PROJECT_NAME]')" >> $GITHUB_ENV
 
-    uses: ./.github/workflows/package.yml
-    with:
-      release_version: ${{ github.event.inputs.release_version }}
-    secrets: inherit
+      - name: Package and Release
+        uses: ./.github/workflows/package.yml
+        with:
+          release_version: ${{ github.event.inputs.release_version }}
 
   print-release:
     needs: package
