@@ -40,6 +40,7 @@ jobs:
     uses: ./.github/workflows/package.yml
     with:
       release_version: ${{ github.event.inputs.release_version }}
+      project_name: ${{ github.event.inputs.project_name }}
     secrets: inherit
 
   print-release:
@@ -49,6 +50,7 @@ jobs:
       - name: Print Release Version
         run: |
           echo "Selected release for deployment: ${{ needs.package.outputs.release_version }}"
+          echo "Selected project: ${{ github.event.inputs.project_name }}"
 
   dev-deploy:
     needs: package
