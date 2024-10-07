@@ -6,6 +6,9 @@ on:
       release_version:
         required: true
         type: string
+      project_name:
+        required: true
+        type: string
     outputs:
       release_version:
           description: 'Output from child workflow'
