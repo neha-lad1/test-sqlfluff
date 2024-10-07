@@ -2,6 +2,10 @@ name: Create Package Workflow
 
 on:
   workflow_call:
+    inputs:
+      project_name:
+        required: true
+        type: string
     outputs:
       release_version:
           description: 'Output from Create Build Workflow'
