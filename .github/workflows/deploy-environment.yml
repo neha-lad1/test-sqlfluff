@@ -24,10 +24,6 @@ jobs:
         echo "RELEASE_VERSION=${{ inputs.release_version }}" >> $GITHUB_ENV
         echo "Deploying release ${{ inputs.release_version }} to ${{ inputs.environment }}"
 
-    - name: Set release version to latest (if release_version is not specified)
-      if: github.event.inputs.release_version == ''
-      run: echo "RELEASE_VERSION=${{ steps.get_latest_release.outputs.result }}" >> $GITHUB_ENV
-
     - name: Ensure permissions
       run: chmod -R u+rwx ${{ github.workspace }}
 
