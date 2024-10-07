@@ -56,6 +56,7 @@ jobs:
     with:
       environment: DEV
       release_version: ${{ needs.package.outputs.release_version }}
+      project_name: ${{ github.event.inputs.project_name }}
     secrets: inherit
 
   test-deploy:
@@ -64,4 +65,5 @@ jobs:
     with:
       environment: TEST
       release_version: ${{ needs.package.outputs.release_version }}
+      project_name: ${{ github.event.inputs.project_name }}
     secrets: inherit
