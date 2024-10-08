@@ -2,13 +2,9 @@ name: Create Package Workflow
 
 on:
   workflow_call:
-    inputs:
-      project_name:
-        required: true
-        type: string
     outputs:
       release_version:
-          description: 'Output from Create Build Workflow'
+          description: 'Output from Create Package Workflow'
           value: ${{ jobs.build.outputs.release_version }}
 
 jobs:
@@ -26,7 +22,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
       with:
-        ref: main
+        ref: develop
 
     - name: Determine initial version
       id: get_initial_version
@@ -101,7 +97,7 @@ jobs:
         draft: false
         prerelease: false
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}
+        GITHUB_TOKEN: ${{ secrets.G_TOKEN }}
 
     - name: Upload to GitHub release
       uses: actions/upload-release-asset@v1
@@ -111,7 +107,7 @@ jobs:
         asset_name: ADW-${{ steps.ensure_unique_tag.outputs.VERSION }}.zip
         asset_content_type: application/zip
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}
+        GITHUB_TOKEN: ${{ secrets.G_TOKEN }}
 
     - name: Set Release Version
       id: set-release
