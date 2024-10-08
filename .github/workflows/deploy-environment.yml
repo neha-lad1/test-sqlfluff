@@ -60,35 +60,28 @@ jobs:
       run: chmod +x ./DevOps/plsql/main.sh
 
     - name: Remove line terminators
-      run: sed -i 's/\r//g' ./DevOps/plsql/main.sh
+      run: |
+      sed -i 's/\r//g' ./DevOps/plsql/main.sh
+      sed -i 's/\r//g' .github/config/config.yaml
 
     - name: Retrieve schema credentials from OCI Vault
       run: |
-        case "${{ github.event.inputs.project_name }}" in
-          WATER_DM)
-            SECRET_ID="${{ secrets.WATER_DM_SECRET }}"
-            ;;
-          OPERATIONS_DM)
-            SECRET_ID="${{ secrets.OPERATIONS_DM_SECRET }}"
-            ;;
-          SOURCE_DM)
-            SECRET_ID="${{ secrets.SOURCE_DM_SECRET }}"
-            ;;
-          COMMON_DM)
-            SECRET_ID="${{ secrets.COMMON_DM_SECRET }}"
-            ;;
-          WQD_DM)
-            SECRET_ID="${{ secrets.WQD_DM_SECRET }}"
-            ;;
-          ENERGY_DM)
-            SECRET_ID="${{ secrets.ENERGY_DM_SECRET }}"
-            ;;
-          *)
-            echo "Unknown project name: ${{ github.event.inputs.project_name }}"
-            exit 1
-            ;;
-        esac
-        echo "Checking the valut pass here"
+        if [ "${{ github.event.inputs.project_name }}" == "WATER_DM" ]; then
+          echo "SECRET_ID="${{ secrets.WATER_DM_SECRET }}" >> $GITHUB_ENV
+        elif [ "${{ github.event.inputs.project_name }}" == "COMMON_DM" ]; then
+          echo "SECRET_ID="${{ secrets.COMMON_DM_SECRET }}" >> $GITHUB_ENV
+        elif [ "${{ github.event.inputs.project_name }}" == "SOURCE_DM" ]; then
+          echo "SECRET_ID="${{ secrets.SOURCE_DM_SECRET }}" >> $GITHUB_ENV
+        fi
+				
+        version=$(grep -A 1 "${{ github.event.inputs.project_name }}:" ".github/config/config.yaml" | grep "versionid:" | awk '{print $2}')
+        if [ -n "$versionid" ]; then
+         echo "CODE_VERSION=$versionid" >> $GITHUB_ENV
+        else
+         echo "Project '${{ github.event.inputs.project_name }}' not found in the config file. Exiting..."
+         exit 1
+        fi
+        echo "Checking the Vault pass here"
         DB_CREDENTIALS=$(oci secrets secret-bundle get --secret-id "$SECRET_ID" --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
         echo "db_credentials=$DB_CREDENTIALS" >> $GITHUB_ENV
     
@@ -101,15 +94,19 @@ jobs:
         RAW_BUCKET: ${{ vars.RAW_BUCKET }}
         PRESENTATION_BUCKET: ${{vars.PRESENTATION_BUCKET}}
         NAMESPACE: ${{ secrets.NAMESPACE }}
+        CURATED_PRE_AUTH: ${{ secrets.CURATED_PRE_AUTH }}
+        RAW_PRE_AUTH: ${{ secrets.RAW_PRE_AUTH }}
+        PRESENTATION_PRE_AUTH: ${{secrets.PRESENTATION_PRE_AUTH}}
         WNAME: ${{ secrets.WNAME }}
         ENV: ${{ secrets.ADW_ENV }}
         DB_USERNAME: ${{ github.event.inputs.project_name }}
-        DB_PASSWORD: "${{ env.db_credentials }}"
+        DB_PASSWORD: "${{ env.DB_CREDENTIALS }}"
+        VERSIONID: ${{ env.VERSIONID }}
         PROJECT_NAME: ${{ github.event.inputs.project_name }}
         DEPLOY_VERSION: ${{ github.event.inputs.release_version }}
       run: |
-        if find ./ADW/${{ github.event.inputs.release_version }}/${{ github.event.inputs.project_name }}/tables/external -type f -name "*.sql" | grep -q .; then
-          for file in ./ADW/${{ github.event.inputs.release_version }}/${{ github.event.inputs.project_name }}/tables/external/*.sql; do
+        if find ./ADW/${VERSIONID}/${{ github.event.inputs.project_name }}/tables/external -type f -name "*.sql" | grep -q .; then
+          for file in ./ADW/${VERSIONID}/${{ github.event.inputs.project_name }}/tables/external/*.sql; do
             sed -i "s/CREDENTIAL_NAME/$CREDENTIAL_NAME/g" "$file"
             sed -i "s/RAW_BUCKET/$RAW_BUCKET/g" "$file"
             sed -i "s/CURATED_BUCKET/$CURATED_BUCKET/g" "$file"
@@ -117,4 +114,4 @@ jobs:
             sed -i "s/NAMESPACE/$NAMESPACE/g" "$file"
         done
         fi
-  
+        ./DevOps/plsql/main.sh
