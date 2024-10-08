@@ -1,12 +1,9 @@
-name: Package Workflow 
+name: Package Workflow
 
 on:
   workflow_call:
     inputs:
       release_version:
-        required: true
-        type: string
-      project_name:
         required: true
         type: string
     outputs:
