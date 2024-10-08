@@ -61,7 +61,7 @@ jobs:
 
     - name: Remove line terminators
       run: |
-      sed -i 's/\r//g' ./DevOps/plsql/main.sh
+      sed -i 's/\r//g'  DevOps/plsql/main.sh
       sed -i 's/\r//g' .github/config/config.yaml
 
     - name: Retrieve schema credentials from OCI Vault
