@@ -1,4 +1,4 @@
-name: CICD (Dev, Test, Staging, Prod)
+name: CICD (Test, Staging, Prod)
 
 on:
   push:
@@ -6,8 +6,8 @@ on:
       - main
     paths:
       - 'ADW/**'
-      - 'Test/**'
-
+      - 'scripts/**'
+  
   workflow_dispatch:
     inputs:
       release_version:
@@ -20,11 +20,10 @@ on:
           - v1.0.2
           - v1.0.3
           - v1.0.4
-          - v1.0.5  
-      project_as_json:
-        description: "JSON input of projects"
-        required: true
-        default: '{ "WATER_DM": "", "OPERATIONS_DM": "", "ENERGY_DM": "", "WQD_DM": "", "SOURCE_DM": "", "COMMON_DM": "" }'
+          - v1.0.5
+          - v1.0.6
+          - v1.0.7
+
 
 jobs:
   
@@ -32,7 +31,6 @@ jobs:
     uses: ./.github/workflows/package.yml
     with:
       release_version: ${{ github.event.inputs.release_version }}
-      project_name: ${{ fromJson(github.event.inputs.project_as_json).WATER_DM }}  # Replace with the desired project key
     secrets: inherit
 
   print-release:
@@ -43,18 +41,26 @@ jobs:
         run: |
           echo "Selected release for deployment: ${{ needs.package.outputs.release_version }}"
 
-  dev-deploy:
-    needs: package
-    uses: ./.github/workflows/deploy-environment.yml
-    with:
-      environment: DEV
-      release_version: ${{ needs.package.outputs.release_version }}
-    secrets: inherit
-
   test-deploy:
-    needs: [package, dev-deploy]
+    needs: package
     uses: ./.github/workflows/deploy-environment.yml
     with:
       environment: TEST
       release_version: ${{ needs.package.outputs.release_version }}
+    secrets: inherit
+
+  staging-deploy:
+    needs: [package, test-deploy]
+    uses: ./.github/workflows/deploy-environment.yml
+    with:
+      environment: STG
+      release_version: ${{ needs.package.outputs.release_version }}
+    secrets: inherit
+
+  prod-deploy:
+    needs: [package, staging-deploy]
+    uses: ./.github/workflows/deploy-environment.yml
+    with:
+        environment: PRD
+        release_version: ${{ needs.package.outputs.release_version }}
     secrets: inherit
