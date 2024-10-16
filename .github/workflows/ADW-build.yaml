@@ -28,6 +28,7 @@ jobs:
       continue-on-error: true
       run: |
         DATE=$(date +"%m%d%Y")
+        echo $DATE
         sqlfluff lint ADW/*.sql --dialect ansi > --format json > sqlfluff_report_$DATE.json
     
     - name: Upload SQLFluff report
