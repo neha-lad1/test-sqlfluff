@@ -31,6 +31,15 @@ jobs:
         echo $DATE
         sqlfluff lint ADW/*.sql --dialect ansi > --format json > sqlfluff_report_$DATE.json
     
+    - name: Run pylint Checks
+      continue-on-error: true
+      run: |
+        DATE=$(date +"%m%d%Y")
+        pylint Code/**/*.py
+        pylint DevOps/**/*.py
+        pylint Code/**/*.py --output-format=json > pylint_code_report_$DATE.json
+        pylint DevOps/**/*.py --output-format=json > pylint_devops_report_$DATE.json
+    
     - name: Upload SQLFluff report
       uses: actions/upload-artifact@v3
       with:
