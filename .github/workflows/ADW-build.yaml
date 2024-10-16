@@ -27,7 +27,14 @@ jobs:
     - name: Run SQL lint Checks
       continue-on-error: true
       run: |
-        sqlfluff lint ADW/*.sql --dialect ansi 
+        DATE=$(date +"%m%d%Y")
+        sqlfluff lint ADW/*.sql --dialect ansi > --format json > sqlfluff_report_$DATE.json
+    
+    - name: Upload SQLFluff report
+      uses: actions/upload-artifact@v3
+      with:
+        name: sqlfluff-report-${{ steps.run_sqlfluff.outputs.DATE }}
+        path: sqlfluff_report_${{ steps.run_sqlfluff.outputs.DATE }}.json
 
     - name: Determine initial version
       id: get_initial_version
