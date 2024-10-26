@@ -1,2 +1,20 @@
-WATER_DM:
-  versionid: 1.0.6
+{
+  "release_version": "${{ github.event.inputs.release_version }}",
+  "projects": [
+    {
+      "name": "COMMON_DM",
+      "paths": {
+        "internal": "ADW/${{ github.event.inputs.release_version }}/COMMON_DM/tables/internal",
+        "external": "ADW/${{ github.event.inputs.release_version }}/COMMON_DM/tables/external"
+      }
+    },
+    {
+      "name": "OPERATIONS_DM",
+      "paths": {
+        "internal": "ADW/${{ github.event.inputs.release_version }}/OPERATIONS_DM/tables/internal",
+        "external": "ADW/${{ github.event.inputs.release_version }}/OPERATIONS_DM/tables/external"
+      }
+    }
+    // Add additional projects similarly
+  ]
+}
