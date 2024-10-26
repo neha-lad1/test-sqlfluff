@@ -238,10 +238,10 @@ jobs:
         echo "region=${{ env.OCI_REGION }}" >> ~/.oci/config
  
     - name: Set execute permissions
-      run: chmod +x ./DevOps/plsql/main.sh
+      run: chmod +x ./DevOps/plsql/deploy.sh
 
     - name: Remove line terminators
-      run: sed -i 's/\r//g' ./DevOps/plsql/main.sh
+      run: sed -i 's/\r//g' ./DevOps/plsql/deploy.sh
 
     - name: Set versionid to match release_version
       run: echo "VERSIONID=${{ github.event.inputs.release_version }}" >> $GITHUB_ENV
@@ -274,4 +274,4 @@ jobs:
             sed -i "s/NAMESPACE/$NAMESPACE/g" "$file"
         done
         fi
-        ./DevOps/plsql/main.sh
+        ./DevOps/plsql/deploy.sh
