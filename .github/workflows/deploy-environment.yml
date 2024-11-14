@@ -16,7 +16,7 @@ on:
 jobs:
 
   deploy: 
-    runs-on: ${{ inputs.environment == 'TEST' && vars.RUNNER_NAME_TEST || (inputs.environment == 'STG' && vars.RUNNER_NAME_STG || vars.RUNNER_NAME_PROD) }}
+    runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     
     steps:
