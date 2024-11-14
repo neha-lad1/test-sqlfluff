@@ -1,0 +1,33 @@
+name: Create Version Directory
+
+on:
+  workflow_dispatch:
+    inputs:
+      versionid:
+        description: "Release version ID"
+        required: true
+
+jobs:
+  create-directory:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+
+      - name: Create version directory if it doesn’t exist
+        run: |
+          VERSION_DIR="src/releases/${{ github.event.inputs.versionid }}"
+          if [ ! -d "$VERSION_DIR" ]; then
+            mkdir -p "$VERSION_DIR"
+            echo "Created version directory: $VERSION_DIR"
+          else
+            echo "Version directory $VERSION_DIR already exists"
+          fi
+      - name: Push changes if directory was created
+        if: steps.create-directory.outputs.created == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Create version directory for ${{ github.event.inputs.versionid }}"
+          git push
