@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ vars.RUNNER_NAME_TEST }}
+    runs-on: ubuntu-latest
 
     outputs:
       release_version: ${{ steps.set-release.outputs.release_version }}
