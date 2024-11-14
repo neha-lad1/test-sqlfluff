@@ -106,7 +106,7 @@ jobs:
         SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
       run: |
         export PATH=$PATH:/opt/sonar-scanner/bin
-        sonar-scanner -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_TOKEN -Dsonar.projectVersion=${{ steps.ensure_unique_tag.outputs.VERSION }}
+        --sonar-scanner -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_TOKEN -Dsonar.projectVersion=${{ steps.ensure_unique_tag.outputs.VERSION }}
     
     - name: Package the code
       run: |
