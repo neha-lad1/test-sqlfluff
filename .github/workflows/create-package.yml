@@ -22,7 +22,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
       with:
-        ref: develop
+        ref: main
 
     - name: Run Trufflehog Scan
       continue-on-error: true
