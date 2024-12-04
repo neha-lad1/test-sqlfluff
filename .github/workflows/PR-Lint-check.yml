@@ -1,0 +1,44 @@
+name: PR-Lint-Check-with-Pylint
+
+permissions: read-all
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  pylint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Run pylint Checks
+        run: |
+          pylint Code/**/*.py | tee pylint_Code_scan_result.txt
+          pylint DevOps/**/*.py | tee pylint_DevOps_scan_result.txt
+          
+          # Extract pylint scores from the result files
+          pylint_score_code=$(grep 'Your code has been rated at' pylint_Code_scan_result.txt | awk '{print $7}' | sed 's/\/10//')
+          pylint_score_devops=$(grep 'Your code has been rated at' pylint_DevOps_scan_result.txt | awk '{print $7}' | sed 's/\/10//')
+          
+          # Echo the scores for debugging purposes
+          echo "Pylint score for Code: $pylint_score_code"
+          echo "Pylint score for DevOps: $pylint_score_devops"
+
+      - name: Check if pylint score is above 7
+        run: |
+          # Use bc to check if either of the scores is below 7 and capture the result in a variable
+          pylint_score_code_below_7=$(echo "$pylint_score_code < 7" | bc)
+          pylint_score_devops_below_7=$(echo "$pylint_score_devops < 7" | bc)
+
+          # Check if either score is below 7
+          if [ "$pylint_score_code_below_7" -eq 1 ] || [ "$pylint_score_devops_below_7" -eq 1 ]; then
+            echo "Pylint score is below 7. Fix linting issues in the code."
+            exit 1
+          else
+            echo "Pylint score is above the threshold."
+            # If both scores are above or equal to 7, pass the check
+            echo "Both directories passed the pylint score threshold."
+          fi
