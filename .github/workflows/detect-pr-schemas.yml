@@ -20,6 +20,9 @@ jobs:
         with:
           python-version: 3.x
 
+      - name: Make script executable
+        run: chmod +x .github/pyfiles/detect_changed_schema.py
+  
       - name: Detect changed schemas
         id: detect
         run: .github/pyfiles/detect_changed_schema.py
