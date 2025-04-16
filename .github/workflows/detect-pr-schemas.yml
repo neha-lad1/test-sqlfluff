@@ -22,7 +22,7 @@ jobs:
 
       - name: Detect changed schemas
         id: detect
-        run: python3 detect_changed_schema.py
+        run: .github/workflows/detect_changed_schema.py
 
   deploy:
     needs: detect-changed-schemas
