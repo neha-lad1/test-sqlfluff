@@ -1,4 +1,3 @@
-
 name: Detect Changed Schemas in PR
 
 on:
@@ -14,12 +13,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Needed to compare against base branch
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.x
 
       - name: Detect changed schemas
         id: detect
-        run: |
-          python3 detect_changed_schema.py
+        run: python3 detect_changed_schema.py
 
-      - name: Output changed schemas
-        run: echo "Changed schemas: ${{ steps.detect.outputs.changed_schemas }}"
+  deploy:
+    needs: detect-changed-schemas
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print changed schemas
+        run: |
+          echo "Schemas: ${{ needs.detect-changed-schemas.outputs.changed-schemas }}"
