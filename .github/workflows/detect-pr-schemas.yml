@@ -1,0 +1,25 @@
+
+name: Detect Changed Schemas in PR
+
+on:
+  workflow_dispatch
+
+jobs:
+  detect-changed-schemas:
+    runs-on: ubuntu-latest
+    outputs:
+      changed-schemas: ${{ steps.detect.outputs.changed_schemas }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Needed to compare against base branch
+
+      - name: Detect changed schemas
+        id: detect
+        run: |
+          python3 detect_changed_schema.py
+
+      - name: Output changed schemas
+        run: echo "Changed schemas: ${{ steps.detect.outputs.changed_schemas }}"
