@@ -2,7 +2,6 @@ import subprocess
 import os
 
 def get_changed_schemas(base_dir="SQL"):
-    # GitHub sets these environment variables in a PR
     base = os.environ.get("GITHUB_BASE_REF")
     head = os.environ.get("GITHUB_HEAD_REF")
 
@@ -11,10 +10,8 @@ def get_changed_schemas(base_dir="SQL"):
         return []
 
     try:
-        # Fetch base branch to ensure we can diff against it
         subprocess.run(["git", "fetch", "origin", base], check=True)
 
-        # Get changed files between base and head
         result = subprocess.run(
             ["git", "diff", "--name-only", f"origin/{base}...{head}"],
             stdout=subprocess.PIPE,
@@ -30,7 +27,7 @@ def get_changed_schemas(base_dir="SQL"):
             if file_path.startswith(base_dir + "/"):
                 parts = file_path.split('/')
                 if len(parts) >= 2:
-                    changed_schemas.add(parts[1])  # Capture schema folder
+                    changed_schemas.add(parts[1])
 
         return list(changed_schemas)
 
@@ -40,4 +37,10 @@ def get_changed_schemas(base_dir="SQL"):
 
 if __name__ == "__main__":
     schemas = get_changed_schemas()
-    print("::set-output name=changed_schemas::" + ",".join(schemas))
+    output = ",".join(schemas)
+    
+    # Use the new way to set output in GitHub Actions
+    github_output = os.environ.get("GITHUB_OUTPUT")
+    if github_output:
+        with open(github_output, "a") as fh:
+            print(f"changed_schemas={output}", file=fh)
