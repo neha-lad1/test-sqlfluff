@@ -1,7 +1,7 @@
 import subprocess
 import os
 
-def get_changed_schemas(base_dir="SQL"):
+def get_changed_schemas(base_dir="ADW/flyway/sql/"):
     base = os.environ.get("GITHUB_BASE_REF")
     head = os.environ.get("GITHUB_HEAD_REF")
 
