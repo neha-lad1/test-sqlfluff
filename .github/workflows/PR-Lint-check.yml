@@ -1,6 +1,8 @@
-name: PR-Lint-Check-with-Pylint
+name: PR-Checks
 
-permissions: read-all
+permissions:   
+  contents: read
+  pull-requests: write
 
 on:
   pull_request:
@@ -8,37 +10,108 @@ on:
       - main
 
 jobs:
-  pylint:
+  pylint-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run pylint Checks
+        run: |
+          # Run pylint checks and save results to files
+          pylint dags/*.py | tee pylint_dags_scan_result.txt
+          pylint scripts/*.py | tee pylint_scripts_scan_result.txt
+
+          # Extract pylint scores from the result files
+          pylint_score_dags=$(grep 'Your code has been rated at' pylint_dags_scan_result.txt | awk '{print $7}' | sed 's/\/10//')
+          pylint_score_scripts=$(grep 'Your code has been rated at' pylint_scripts_scan_result.txt | awk '{print $7}' | sed 's/\/10//')
+
+          # Echo the scores for debugging purposes
+          echo "Pylint score for dags: $pylint_score_dags"
+          echo "Pylint score for scripts: $pylint_score_scripts"
+
+          # Initialize a flag for overall success
+          success=true
+
+          # Check if scores for each directory are above or equal to 7
+          if (( $(echo "$pylint_score_dags < 7" | bc -l) )); then
+            echo "Pylint score for dags is below 7. Fix linting issues in the dags directory."
+            success=false
+          fi
+
+          if (( $(echo "$pylint_score_scripts < 7" | bc -l) )); then
+            echo "Pylint score for scripts is below 7. Fix linting issues in the scripts directory."
+            success=false
+          fi
+
+          # Final result based on the success flag
+          if [ "$success" = false ]; then
+            echo "One or more directories failed the pylint score threshold."
+            exit 1
+          else
+            echo "Both directories passed the pylint score threshold."
+          fi
+
+  trufflehog-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run Trufflehog Scan
+        run: |
+          trufflehog filesystem --no-update ./.github ./dags ./scripts | tee trufflehog_scan_result.txt
+
+  sonarcloud-scan:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Run pylint Checks
+      - name: Set up environment
         run: |
-          pylint Code/**/*.py | tee pylint_Code_scan_result.txt
-          pylint DevOps/**/*.py | tee pylint_DevOps_scan_result.txt
-          
-          # Extract pylint scores from the result files
-          pylint_score_code=$(grep 'Your code has been rated at' pylint_Code_scan_result.txt | awk '{print $7}' | sed 's/\/10//')
-          pylint_score_devops=$(grep 'Your code has been rated at' pylint_DevOps_scan_result.txt | awk '{print $7}' | sed 's/\/10//')
-          
-          # Echo the scores for debugging purposes
-          echo "Pylint score for Code: $pylint_score_code"
-          echo "Pylint score for DevOps: $pylint_score_devops"
+          echo "PROFILE=ADMIN" >> $GITHUB_ENV
 
-      - name: Check if pylint score is above 7
+      - name: Fetch secrets from OCI vault
+        id: get_secrets
+        env:
+          SONARCLOUD_TOKEN: ${{ vars.SONARCLOUD_TOKEN }}
+          VAULT_ID: ${{ secrets.VAULT_ID_NONPROD_SYNERGYZE }}
         run: |
-          # Use bc to check if either of the scores is below 7 and capture the result in a variable
-          pylint_score_code_below_7=$(echo "$pylint_score_code < 7" | bc)
-          pylint_score_devops_below_7=$(echo "$pylint_score_devops < 7" | bc)
+          # Fetch the secret values from OCI Vault and decode them
+          SONARCLOUD_TOKEN=$(oci secrets secret-bundle get-secret-bundle-by-name --profile ${{ env.PROFILE }} --secret-name "${{ env.SONARCLOUD_TOKEN }}" --vault-id ${{ env.VAULT_ID }} --query 'data."secret-bundle-content".content' --raw-output | base64 --decode)
+          
+          # Mask the secrets
+          echo "::add-mask::$SONARCLOUD_TOKEN"
 
-          # Check if either score is below 7
-          if [ "$pylint_score_code_below_7" -eq 1 ] || [ "$pylint_score_devops_below_7" -eq 1 ]; then
-            echo "Pylint score is below 7. Fix linting issues in the code."
-            exit 1
-          else
-            echo "Pylint score is above the threshold."
-            # If both scores are above or equal to 7, pass the check
-            echo "Both directories passed the pylint score threshold."
-          fi
+          # Set the secret values into GITHUB_OUTPUT
+          echo "SONARCLOUD_TOKEN=$SONARCLOUD_TOKEN" >> $GITHUB_OUTPUT
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v4
+        env:
+          SONAR_TOKEN: ${{ steps.get_secrets.outputs.SONARCLOUD_TOKEN }}
+
+      - name: SonarQube Quality Gate check
+        id: sonarqube-quality-gate-check
+        uses: sonarsource/sonarqube-quality-gate-action@master
+        with:
+          pollingTimeoutSec: 600
+        env:
+          SONAR_TOKEN: ${{ steps.get_secrets.outputs.SONARCLOUD_TOKEN }}
+
+  veracode-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Package the code
+        run: |
+          zip -r AIRFLOW-VERACODE.zip .
+
+      - name: Run Veracode Pipeline Scan
+        uses: veracode/Veracode-pipeline-scan-action@v1.0.18
+        with:
+          vid: ${{ secrets.VERACODE_ID }}
+          vkey: ${{ secrets.VERACODE_SECRET }}
+          file: "AIRFLOW-VERACODE.zip"
+          veracode_policy_name: "ENOWA - Default"
+          fail_build: true
+        
+      - name: Run Veracode SCA Scan
+        run: |
+          srcclr scan . --allow-dirty
